@@ -5,8 +5,6 @@ import QuestionCard from "@/components/QuestionCard";
 import Timer from "@/components/Timer";
 import { round1Questions, round2Questions, round3Questions, round4Questions, locationHints, Question } from "@/data/questions";
 import HintScreen from "@/components/HintScreen";
-import { Trophy, Skull } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const roundTitles = ["VR + Aptitude", "Tech Riddles + Memes", "Rapid Fire", "DSA Final"];
 const roundTimers = [60, 60, 15, 90];
@@ -22,10 +20,17 @@ const getRoundQuestions = (round: number): Question[] => {
 };
 
 const RoundScreen = () => {
-  const { currentRound, setCurrentRound, loseLifeline, setGameState, setRoundComplete, gameState } = useGame();
+  const { currentRound, setCurrentRound, loseLifeline, setGameState, setRoundComplete, gameState, addScore, startGlobalTimer, finishGame } = useGame();
   const [qIndex, setQIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
+  const [timerStarted, setTimerStarted] = useState(false);
+
+  // Start global timer on first render of round 1
+  if (currentRound === 1 && !timerStarted) {
+    startGlobalTimer();
+    setTimerStarted(true);
+  }
 
   const questions = getRoundQuestions(currentRound);
   const currentQ = questions[qIndex];
@@ -38,28 +43,31 @@ const RoundScreen = () => {
       // Round complete
       setRoundComplete(currentRound);
       if (currentRound >= 4) {
-        setGameState("winner");
+        finishGame();
       } else {
         setShowHint(true);
       }
     }
-  }, [qIndex, questions.length, currentRound, setRoundComplete, setGameState]);
+  }, [qIndex, questions.length, currentRound, setRoundComplete, finishGame]);
 
   const handleCorrect = useCallback(() => {
+    addScore(10); // +10 for correct answer
     setTimeout(() => advanceQuestion(), 600);
-  }, [advanceQuestion]);
+  }, [advanceQuestion, addScore]);
 
   const handleWrong = useCallback(() => {
+    addScore(-5); // -5 for wrong answer
     setTimeout(() => {
       const alive = loseLifeline();
       if (alive) advanceQuestion();
     }, 600);
-  }, [loseLifeline, advanceQuestion]);
+  }, [loseLifeline, advanceQuestion, addScore]);
 
   const handleTimeout = useCallback(() => {
+    addScore(-5);
     const alive = loseLifeline();
     if (alive) advanceQuestion();
-  }, [loseLifeline, advanceQuestion]);
+  }, [loseLifeline, advanceQuestion, addScore]);
 
   const handleNextRound = useCallback(() => {
     const next = currentRound + 1;
