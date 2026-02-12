@@ -2,16 +2,19 @@ import { useState } from "react";
 import { useGame } from "@/context/GameContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Crosshair, Zap } from "lucide-react";
+import { Crosshair, Zap, Loader2 } from "lucide-react";
 
 const LoginScreen = () => {
-  const { setUsername, setGameState } = useGame();
+  const { registerParticipant, setGameState } = useGame();
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!name.trim()) return;
-    setUsername(name.trim());
+    setLoading(true);
+    await registerParticipant(name.trim());
     setGameState("qr-scan");
+    setLoading(false);
   };
 
   return (
@@ -35,14 +38,15 @@ const LoginScreen = () => {
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleStart()}
           className="bg-secondary border-border text-center text-foreground placeholder:text-muted-foreground focus:neon-border h-12"
+          disabled={loading}
         />
         <Button
           onClick={handleStart}
-          disabled={!name.trim()}
+          disabled={!name.trim() || loading}
           className="h-12 font-display tracking-wider gap-2 text-sm"
         >
-          <Zap className="w-4 h-4" />
-          START GAME
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+          {loading ? "JOINING..." : "START GAME"}
         </Button>
       </div>
 

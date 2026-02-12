@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 
 export type GameState = "login" | "qr-scan" | "round" | "hint" | "winner" | "eliminated";
 
@@ -14,17 +15,16 @@ export interface GameContextType {
   resetGame: () => void;
   roundScores: boolean[];
   setRoundComplete: (round: number) => void;
-  // Scoring
   score: number;
   addScore: (points: number) => void;
-  // Timer
   elapsedSeconds: number;
   startGlobalTimer: () => void;
   stopGlobalTimer: () => void;
-  // Final
   finalScore: number | null;
   finalTime: number | null;
   finishGame: () => void;
+  participantId: string | null;
+  registerParticipant: (name: string) => Promise<void>;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -45,7 +45,22 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [finalTime, setFinalTime] = useState<number | null>(null);
+  const [participantId, setParticipantId] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const registerParticipant = useCallback(async (name: string) => {
+    const { data, error } = await supabase
+      .from("participants")
+      .insert({ username: name, score: 0, completion_time: null, completed: false })
+      .select("id")
+      .single();
+    if (error) {
+      console.error("Error registering participant:", error);
+      return;
+    }
+    setParticipantId(data.id);
+    setUsername(name);
+  }, []);
 
   const addScore = useCallback((points: number) => {
     setScore(prev => prev + points);
@@ -72,6 +87,21 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setScore(s => {
         const total = s + lifelineBonus;
         setFinalScore(total);
+
+        // Update Supabase with final results
+        setParticipantId(currentId => {
+          if (currentId) {
+            supabase
+              .from("participants")
+              .update({ score: total, completion_time: prev, completed: true })
+              .eq("id", currentId)
+              .then(({ error }) => {
+                if (error) console.error("Error updating participant:", error);
+              });
+          }
+          return currentId;
+        });
+
         return total;
       });
       setFinalTime(prev);
@@ -97,7 +127,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       copy[round - 1] = true;
       return copy;
     });
-    // +10 bonus for completing a round
     setScore(prev => prev + 10);
   }, []);
 
@@ -112,6 +141,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setElapsedSeconds(0);
     setFinalScore(null);
     setFinalTime(null);
+    setParticipantId(null);
   }, [stopGlobalTimer]);
 
   return (
@@ -126,6 +156,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         score, addScore,
         elapsedSeconds, startGlobalTimer, stopGlobalTimer,
         finalScore, finalTime, finishGame,
+        participantId, registerParticipant,
       }}
     >
       {children}
