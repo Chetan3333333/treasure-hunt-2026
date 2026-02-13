@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
 import GameHeader from "@/components/GameHeader";
 import QuestionCard from "@/components/QuestionCard";
@@ -27,10 +27,12 @@ const RoundScreen = () => {
   const [timerStarted, setTimerStarted] = useState(false);
 
   // Start global timer on first render of round 1
-  if (currentRound === 1 && !timerStarted) {
-    startGlobalTimer();
-    setTimerStarted(true);
-  }
+  useEffect(() => {
+    if (currentRound === 1 && !timerStarted) {
+      startGlobalTimer();
+      setTimerStarted(true);
+    }
+  }, [currentRound, timerStarted, startGlobalTimer]);
 
   const questions = getRoundQuestions(currentRound);
   const currentQ = questions[qIndex];

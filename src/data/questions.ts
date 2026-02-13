@@ -84,3 +84,10 @@ export const locationHints = [
   "💻 Visit the computer lab — check the whiteboard near the projector.",
   "🏆 Final stop: Auditorium main door — your destiny awaits!",
 ];
+
+export const roundPasswords: Record<number, string> = {
+  1: "glitch_protocol_start",
+  2: "echo_silence_break",
+  3: "css_style_master",
+  4: "binary_search_log_n",
+};
