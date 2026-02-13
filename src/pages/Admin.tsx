@@ -64,6 +64,20 @@ const Admin = () => {
         }
     };
 
+    const forceNextRound = async (id: string, currentRound: number) => {
+        const { error } = await supabase
+            .from("participants")
+            .update({ current_round: currentRound + 1 })
+            .eq("id", id);
+
+        if (error) {
+            toast.error("Failed to unlock");
+        } else {
+            toast.success(`Unlocked Round ${currentRound + 1}`);
+            fetchParticipants();
+        }
+    };
+
     if (!authenticated) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen gap-4">
@@ -95,22 +109,36 @@ const Admin = () => {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Username</TableHead>
+                            <TableHead>Location (Hint)</TableHead>
                             <TableHead>Round</TableHead>
                             <TableHead>Score</TableHead>
                             <TableHead>Lifelines</TableHead>
-                            <TableHead>Time (s)</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {participants.map((p) => (
                             <TableRow key={p.id}>
                                 <TableCell className="font-medium">{p.username}</TableCell>
-                                <TableCell>Round {p.current_round}</TableCell>
+                                <TableCell className="text-xs max-w-[200px] truncate" title={getLocationHint(p.current_round)}>
+                                    {getLocationHint(p.current_round)}
+                                </TableCell>
+                                <TableCell>R{p.current_round}</TableCell>
                                 <TableCell>{p.score}</TableCell>
                                 <TableCell>{p.lifelines}</TableCell>
-                                <TableCell>{p.completion_time}</TableCell>
                                 <TableCell>{p.completed ? "🏆 WINNER" : (p.lifelines <= 0 ? "💀 ELIMINATED" : "ACTIVE")}</TableCell>
+                                <TableCell>
+                                    {!p.completed && p.lifelines > 0 && (
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            onClick={() => forceNextRound(p.id, p.current_round)}
+                                        >
+                                            Force Unlock 🔓
+                                        </Button>
+                                    )}
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -118,6 +146,13 @@ const Admin = () => {
             )}
         </div>
     );
+};
+
+// Helper for location
+import { locationHints } from "@/data/questions";
+const getLocationHint = (round: number) => {
+    if (round > 4) return "Finish Line";
+    return locationHints[round - 1] || "Unknown";
 };
 
 export default Admin;

@@ -51,7 +51,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const registerParticipant = useCallback(async (name: string) => {
     const { data, error } = await supabase
       .from("participants")
-      .insert({ username: name, score: 0, completion_time: null, completed: false })
+      .insert({ username: name, score: 0, completion_time: null, completed: false, current_round: 1, lifelines: 4 })
       .select("id")
       .single();
     if (error) {
@@ -129,6 +129,46 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     setScore(prev => prev + 10);
   }, []);
+
+  const updateParticipant = useCallback(async (updates: any) => {
+    if (!participantId) return;
+    const { error } = await supabase
+      .from("participants")
+      .update(updates)
+      .eq("id", participantId);
+    if (error) console.error("Error updating participant:", error);
+  }, [participantId]);
+
+  // Sync Round Changes to DB
+  React.useEffect(() => {
+    if (participantId) {
+      updateParticipant({ current_round: currentRound, lifelines: lifelines, score: score });
+    }
+  }, [currentRound, lifelines, score, participantId, updateParticipant]);
+
+  // Poll for Admin Commands (Force Unlock)
+  React.useEffect(() => {
+    if (!participantId || gameState === "winner" || gameState === "eliminated") return;
+
+    const pollInterval = setInterval(async () => {
+      const { data } = await supabase
+        .from("participants")
+        .select("current_round, lifelines")
+        .eq("id", participantId)
+        .single();
+
+      if (data) {
+        // If Admin forced a round skip
+        if (data.current_round > currentRound) {
+          setCurrentRound(data.current_round);
+          setGameState("qr-scan"); // Reset to scanning phase for new round
+        }
+        // Could also sync lifelines if admin grants mercy
+      }
+    }, 3000); // Check every 3 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [participantId, currentRound, gameState]);
 
   const resetGame = useCallback(() => {
     stopGlobalTimer();
