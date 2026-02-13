@@ -117,12 +117,23 @@ const Admin = () => {
 
     const togglePause = async () => {
         const newStatus = !isPaused;
-        await supabase
+        // Use upsert to ensure row exists
+        const { error } = await supabase
             .from("participants")
-            .update({ score: newStatus ? 1 : 0 })
-            .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
-        setIsPaused(newStatus);
-        toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
+            .upsert({
+                id: "00000000-0000-0000-0000-000000000000",
+                score: newStatus ? 1 : 0,
+                username: "GLOBAL_SETTINGS", // Reset name just in case
+                lifelines: 999,
+                current_round: 999
+            });
+
+        if (error) {
+            toast.error("Action failed: " + error.message);
+        } else {
+            setIsPaused(newStatus);
+            toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
+        }
     };
 
     const sendBroadcast = async () => {
