@@ -32,14 +32,17 @@ const RoundScreen = () => {
   // Anti-Cheat: Focus Mode Detection
   useEffect(() => {
     const handleVisibilityChange = () => {
+      // If the document becomes hidden (user switches tabs/apps)
       if (document.hidden && gameState === "round" && !showHint) {
-        // Player switched tabs or minimized
         playSound("wrong");
-        toast.error("⚠️ SYSTEM BREACH: Tab switching detected! Lifeline Lost.", {
-          duration: 4000,
-          style: { border: "1px solid red", color: "red" }
-        });
         loseLifeline();
+      }
+      // If the document becomes visible again (user returns)
+      else if (!document.hidden && gameState === "round" && !showHint) {
+        toast.error("⚠️ SYSTEM BREACH DETECTED: You left the secure terminal! Lifeline Lost.", {
+          duration: 5000,
+          style: { border: "2px solid red", color: "red", background: "#220000" }
+        });
       }
     };
 
@@ -127,6 +130,9 @@ const RoundScreen = () => {
             <h2 className="font-display text-sm neon-text tracking-wider">
               ROUND {currentRound}
             </h2>
+            <p className="text-xs text-red-500 animate-pulse font-mono mt-1">
+              ⚠ SECURE TERMINAL: FOCUS REQUIRED
+            </p>
             <p className="text-xs text-muted-foreground">{roundTitles[currentRound - 1]}</p>
           </div>
           <div className="flex items-center gap-3">
