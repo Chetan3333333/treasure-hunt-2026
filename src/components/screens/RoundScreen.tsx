@@ -5,6 +5,8 @@ import QuestionCard from "@/components/QuestionCard";
 import Timer from "@/components/Timer";
 import { round1Questions, round2Questions, round3Questions, round4Questions, locationHints, Question } from "@/data/questions";
 import HintScreen from "@/components/HintScreen";
+import { useSound } from "@/context/SoundContext";
+import { toast } from "sonner";
 
 const roundTitles = ["VR + Aptitude", "Tech Riddles + Memes", "Rapid Fire", "DSA Final"];
 const roundTimers = [60, 60, 15, 90];
@@ -21,10 +23,29 @@ const getRoundQuestions = (round: number): Question[] => {
 
 const RoundScreen = () => {
   const { currentRound, setCurrentRound, loseLifeline, setGameState, setRoundComplete, gameState, addScore, startGlobalTimer, finishGame } = useGame();
+  const { playSound } = useSound();
   const [qIndex, setQIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [timerStarted, setTimerStarted] = useState(false);
+
+  // Anti-Cheat: Focus Mode Detection
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && gameState === "round" && !showHint) {
+        // Player switched tabs or minimized
+        playSound("wrong");
+        toast.error("⚠️ SYSTEM BREACH: Tab switching detected! Lifeline Lost.", {
+          duration: 4000,
+          style: { border: "1px solid red", color: "red" }
+        });
+        loseLifeline();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [gameState, showHint, loseLifeline, playSound]);
 
   // Start global timer on first render of round 1
   useEffect(() => {
