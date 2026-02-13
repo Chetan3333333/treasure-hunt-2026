@@ -55,10 +55,7 @@ const QRScanScreen = () => {
     }
   };
 
-  const handleSimulateScan = () => {
-    // Simulate a successful scan with the correct password
-    handleScan(roundPasswords[currentRound]);
-  };
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -94,10 +91,7 @@ const QRScanScreen = () => {
             Find the QR code at the location and scan it to start Round {currentRound}
           </p>
         </div>
-        <Button onClick={handleSimulateScan} variant="outline" className="neon-border gap-2">
-          <ScanLine className="w-4 h-4" />
-          Simulate QR Scan (Debug)
-        </Button>
+
       </div>
     </div>
   );
