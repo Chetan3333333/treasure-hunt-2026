@@ -94,9 +94,22 @@ const Admin = () => {
     }, [authenticated]);
 
     const checkGlobalSettings = async () => {
-        const { data } = await supabase.from("participants").select("*").eq("username", "GLOBAL_SETTINGS").maybeSingle();
+        // Use ID to find the row, even if username (broadcast msg) changes
+        const { data } = await supabase
+            .from("participants")
+            .select("*")
+            .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
+            .maybeSingle();
+
         if (!data) {
-            await supabase.from("participants").insert({ username: "GLOBAL_SETTINGS", score: 0, lifelines: 999, current_round: 999 }); // score 0 = active
+            // Create if missing with FIXED ID
+            await supabase.from("participants").insert({
+                id: "00000000-0000-0000-0000-000000000000",
+                username: "GLOBAL_SETTINGS",
+                score: 0,
+                lifelines: 999,
+                current_round: 999
+            });
         } else {
             setIsPaused(data.score === 1);
         }
@@ -104,20 +117,33 @@ const Admin = () => {
 
     const togglePause = async () => {
         const newStatus = !isPaused;
-        await supabase.from("participants").update({ score: newStatus ? 1 : 0 }).eq("username", "GLOBAL_SETTINGS");
+        await supabase
+            .from("participants")
+            .update({ score: newStatus ? 1 : 0 })
+            .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
         setIsPaused(newStatus);
         toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
     };
 
     const sendBroadcast = async () => {
         if (!broadcastMsg) return;
-        // Hack: Store message in username of GLOBAL_SETTINGS
-        await supabase.from("participants").update({ username: `📢 ${broadcastMsg}` }).eq("username", "GLOBAL_SETTINGS");
+
+        // 1. Send Message by changing username
+        await supabase
+            .from("participants")
+            .update({ username: `📢 ${broadcastMsg}` })
+            .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
+
         toast.success("Broadcast Sent!");
+
+        // 2. Clear after 8s
         setTimeout(async () => {
-            // Reset after 10s so it doesn't stick forever
-            await supabase.from("participants").update({ username: "GLOBAL_SETTINGS" }).eq("username", `📢 ${broadcastMsg}`);
-        }, 10000);
+            await supabase
+                .from("participants")
+                .update({ username: "GLOBAL_SETTINGS" })
+                .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
+        }, 8000);
+
         setBroadcastMsg("");
     };
 

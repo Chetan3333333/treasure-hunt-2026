@@ -155,7 +155,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   React.useEffect(() => {
     // Poll Global State (Participant ID: 00000000-0000-0000-0000-000000000000)
     // We use a specific ID or just filter by username 'GLOBAL_SETTINGS' if ID is dynamic.
-    // Let's assume the component handling Admin will create/update a row with username 'GLOBAL_SETTINGS'.
 
     const pollInterval = setInterval(async () => {
       // 1. Poll User Data (Revive, Unlock, Score)
@@ -184,14 +183,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // 2. Poll Global Settings (Pause, Broadcast)
-      // We look for a user named "GLOBAL_SETTINGS"
+      // We look for a user with the FIXED ID for settings
       const { data: globalData } = await supabase
         .from("participants")
-        .select("score, username") // score = paused state (1=paused), username = broadcast msg (encoded?)
-        // Actually, let's use a workaround. We will use 'score' for PAUSED (1=true)
-        // And we can't easily store a long message in existing fields without hijacking.
-        // Let's use 'username' for the message itself if it starts with "MSG:"
-        .eq("username", "GLOBAL_SETTINGS") // This row must exist!
+        .select("score, username")
+        .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
         .maybeSingle();
 
       if (globalData) {
@@ -199,17 +195,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsPaused(paused);
 
         // If username contains a message format like "MSG:Hello World"
-        // This is hacky but avoids schema changes.
-        // Actually, let's look for a row with username "BROADCAST_MSG" for the message separately if needed.
-        // For simplicity: Admin toggles PAUSE by setting score=1 on GLOBAL_SETTINGS.
-        // Admin sends MESSAGE by setting username="MSG:Alert text" on GLOBAL_SETTINGS (then resets to GLOBAL_SETTINGS after 10s?)
-        // Let's just use a separate row for message? 
-        // Let's assume GLOBAL_SETTINGS username field IS the message.
-        // Default username is "GLOBAL_SETTINGS". If it changes to something else, it's a broadcast.
         if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
           setBroadcastMessage(globalData.username);
         } else {
-          setBroadcastMessage(null);
+          setBroadcastMessage(null); // Clear message if reset
         }
       }
 
