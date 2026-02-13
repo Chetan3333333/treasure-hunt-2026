@@ -192,6 +192,20 @@ const Admin = () => {
                         >
                             {isPaused ? "RESUME GAME ▶️" : "PAUSE GAME ⏸️"}
                         </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                                const { error } = await supabase.from("participants").upsert({
+                                    id: "00000000-0000-0000-0000-000000000000",
+                                    username: "GLOBAL_SETTINGS"
+                                });
+                                if (error) alert("GOD MODE ERROR: " + error.message);
+                                else alert("GOD MODE CONNECTED! ✅");
+                            }}
+                        >
+                            Test 🛠️
+                        </Button>
                     </div>
                 </div>
             </div>
