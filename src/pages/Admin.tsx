@@ -189,8 +189,76 @@ const Admin = () => {
         );
     }
 
+    // DIAGNOSIS STATE
+    const [diagStatus, setDiagStatus] = useState<string>("Ready");
+    const [diagLogs, setDiagLogs] = useState<string[]>([]);
+
+    const runDiagnosis = async () => {
+        setDiagStatus("Running...");
+        setDiagLogs([]);
+        const logs: string[] = [];
+        const log = (msg: string) => { logs.push(msg); setDiagLogs([...logs]); };
+
+        try {
+            log("1. Checking Supabase Connection...");
+            const { count, error: countErr } = await supabase.from("participants").select("*", { count: "exact", head: true });
+            if (countErr) throw new Error("Connection Failed: " + countErr.message);
+            log(`✅ Connected. Rows: ${count}`);
+
+            log("2. Checking Global Settings Row...");
+            const { data: globalRow, error: fetchErr } = await supabase
+                .from("participants")
+                .select("*")
+                .eq("id", "00000000-0000-0000-0000-000000000000")
+                .maybeSingle();
+
+            if (fetchErr) throw new Error("Fetch Failed: " + fetchErr.message);
+
+            if (!globalRow) {
+                log("⚠️ Global Row MISSING. Attempting creation...");
+                const { error: createErr } = await supabase.from("participants").insert({
+                    id: "00000000-0000-0000-0000-000000000000",
+                    username: "GLOBAL_SETTINGS",
+                    score: 0,
+                    lifelines: 999,
+                    current_round: 999
+                });
+                if (createErr) throw new Error("Creation Failed: " + createErr.message);
+                log("✅ Global Row Created.");
+            } else {
+                log(`✅ Global Row READY. Score: ${globalRow.score}, Name: ${globalRow.username}`);
+            }
+
+            log("3. Testing Update...");
+            const { error: updateErr } = await supabase
+                .from("participants")
+                .update({ current_round: 999 }) // Harmless update
+                .eq("id", "00000000-0000-0000-0000-000000000000");
+
+            if (updateErr) throw new Error("Update Failed: " + updateErr.message);
+            log("✅ Update Verified.");
+
+            setDiagStatus("✅ SYSTEM OPTIMAL");
+        } catch (e: any) {
+            log("❌ ERROR: " + e.message);
+            setDiagStatus("❌ SYSTEM FAILURE");
+        }
+    };
+
     return (
         <div className="p-8 min-h-screen bg-background pb-20">
+            {/* DIAGNOSIS PANEL */}
+            <div className="mb-8 p-4 border border-zinc-700 rounded bg-zinc-900/50">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-bold text-zinc-400">🔧 SYSTEM DIAGNOSTICS</h3>
+                    <Button onClick={runDiagnosis} size="sm" variant="outline">RUN CHECK</Button>
+                </div>
+                <div className="font-mono text-xs text-green-400 bg-black p-2 rounded h-32 overflow-y-auto border border-zinc-800">
+                    <div className="text-zinc-500">Status: {diagStatus}</div>
+                    {diagLogs.map((l, i) => <div key={i}>{l}</div>)}
+                </div>
+            </div>
+
             <div className="flex flex-col gap-6 mb-8">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold neon-text">Game Control Center</h1>
