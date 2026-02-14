@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 
 interface SoundContextType {
-    playSound: (name: "click" | "success" | "scary" | "laugh" | "win" | "siren" | "airhorn") => void;
+    playSound: (name: "click" | "success" | "scary" | "laugh" | "win" | "siren" | "airhorn" | "wrong") => void;
     toggleMute: () => void;
     isMuted: boolean;
 }
@@ -27,7 +27,10 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             laugh: "https://assets.mixkit.co/active_storage/sfx/416/416-preview.mp3", // Evil Laugh
             win: "https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3",
             siren: "https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3", // Siren
-            airhorn: "https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3" // Airhorn-ish
+            win: "https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3",
+            siren: "https://assets.mixkit.co/active_storage/sfx/995/995-preview.mp3", // Siren
+            airhorn: "https://assets.mixkit.co/active_storage/sfx/1003/1003-preview.mp3", // Airhorn-ish
+            wrong: "https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3" // Error sound
         };
 
         Object.entries(sounds).forEach(([key, src]) => {
