@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import GameHeader from "@/components/GameHeader";
 
 interface Participant {
     id: string;
@@ -21,12 +20,15 @@ const Admin = () => {
     const [authenticated, setAuthenticated] = useState(false);
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [loading, setLoading] = useState(false);
+    const [broadcastMsg, setBroadcastMsg] = useState("");
+    const [isPaused, setIsPaused] = useState(false);
 
     // In a real app, verify on server. Here just simple client-side check.
     const checkAuth = () => {
         if (password === "admin123") {
             setAuthenticated(true);
             fetchParticipants();
+            checkGlobalSettings(); // Check immediately on login
         } else {
             toast.error("Invalid Password");
         }
@@ -47,6 +49,49 @@ const Admin = () => {
         }
         setLoading(false);
     };
+
+    // Ensure the God Mode row exists
+    const checkGlobalSettings = async () => {
+        // 1. Try to find the settings row
+        const { data } = await supabase
+            .from("participants")
+            .select("*")
+            .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
+            .maybeSingle();
+
+        // 2. If missing, create it once.
+        if (!data) {
+            console.log("Creating Global Settings Row...");
+            const { error } = await supabase.from("participants").insert({
+                id: "00000000-0000-0000-0000-000000000000",
+                username: "GLOBAL_SETTINGS",
+                score: 0,
+                lifelines: 999,
+                current_round: 999
+            });
+            if (error) {
+                console.error("Failed to init Global Settings", error);
+                toast.error("Init Failed: " + error.message);
+            } else {
+                toast.success("System Initialized 📡");
+            }
+        } else {
+            // Check current numeric states for UI sync
+            setIsPaused(data.score === 1 || data.score === 2);
+        }
+    };
+
+    // Initialize Global Settings Row when mounting/auth changes
+    useEffect(() => {
+        if (authenticated) {
+            checkGlobalSettings();
+
+            // Auto-refresh stats every 5s
+            const interval = setInterval(fetchParticipants, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [authenticated]);
+
 
     const resetGame = async () => {
         if (!confirm("ARE YOU SURE? This will DELETE all participants/scores.")) return;
@@ -83,53 +128,19 @@ const Admin = () => {
         if (error) toast.error("Score update failed"); else { toast.success(`Score ${amount > 0 ? '+' : ''}${amount}`); fetchParticipants(); }
     };
 
-    const [broadcastMsg, setBroadcastMsg] = useState("");
-    const [isPaused, setIsPaused] = useState(false);
-
-    // Initialize Global Settings Row
-    useEffect(() => {
-        if (authenticated) {
-            checkGlobalSettings();
-        }
-    }, [authenticated]);
-
-    const checkGlobalSettings = async () => {
-        // Use ID to find the row, even if username (broadcast msg) changes
-        const { data } = await supabase
-            .from("participants")
-            .select("*")
-            .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
-            .maybeSingle();
-
-        if (!data) {
-            // Create if missing with FIXED ID
-            await supabase.from("participants").insert({
-                id: "00000000-0000-0000-0000-000000000000",
-                username: "GLOBAL_SETTINGS",
-                score: 0,
-                lifelines: 999,
-                current_round: 999
-            });
-        } else {
-            setIsPaused(data.score === 1 || data.score === 2);
-        }
-    };
-
     const togglePause = async () => {
+        // Toggle between 0 (Live) and 1 (Paused). 
         const newStatus = !isPaused;
-        // Use upsert to ensure row exists
+        const newScore = newStatus ? 1 : 0;
+
+        // Update ONLY score.
         const { error } = await supabase
             .from("participants")
-            .upsert({
-                id: "00000000-0000-0000-0000-000000000000",
-                score: newStatus ? 1 : 0,
-                username: "GLOBAL_SETTINGS", // Reset name just in case
-                lifelines: 999,
-                current_round: 999
-            });
+            .update({ score: newScore })
+            .eq("id", "00000000-0000-0000-0000-000000000000");
 
         if (error) {
-            toast.error("Action failed: " + error.message);
+            toast.error("Pause Action Failed: " + error.message);
         } else {
             setIsPaused(newStatus);
             toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
@@ -139,20 +150,25 @@ const Admin = () => {
     const sendBroadcast = async () => {
         if (!broadcastMsg) return;
 
-        // 1. Send Message by changing username
-        await supabase
+        // Update ONLY username
+        const { error } = await supabase
             .from("participants")
             .update({ username: `📢 ${broadcastMsg}` })
-            .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
+            .eq("id", "00000000-0000-0000-0000-000000000000");
+
+        if (error) {
+            toast.error("Broadcast Failed: " + error.message);
+            return;
+        }
 
         toast.success("Broadcast Sent!");
 
-        // 2. Clear after 8s
+        // Clear after 8s
         setTimeout(async () => {
             await supabase
                 .from("participants")
                 .update({ username: "GLOBAL_SETTINGS" })
-                .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
+                .eq("id", "00000000-0000-0000-0000-000000000000");
         }, 8000);
 
         setBroadcastMsg("");
@@ -173,6 +189,10 @@ const Admin = () => {
             </div>
         );
     }
+
+    // Helper to get global state from participants list
+    const globalState = participants.find(p => p.id === "00000000-0000-0000-0000-000000000000");
+    const isBlackout = globalState?.score === 2;
 
     return (
         <div className="p-8 min-h-screen bg-background pb-20">
@@ -199,7 +219,7 @@ const Admin = () => {
                         <div className="text-right">
                             <div className="font-mono text-xs text-muted-foreground">STATUS</div>
                             <div className={`font-bold ${isPaused ? "text-red-500" : "text-green-500"}`}>
-                                {isPaused ? "PAUSED ⏸️" : (participants.find(p => p.username === "GLOBAL_SETTINGS")?.score === 2 ? "BLACKOUT 🌑" : "LIVE 🟢")}
+                                {isPaused ? "PAUSED ⏸️" : (isBlackout ? "BLACKOUT 🌑" : "LIVE 🟢")}
                             </div>
                         </div>
 
@@ -215,18 +235,19 @@ const Admin = () => {
                         {/* Toggle Blackout (Status 2) */}
                         <Button
                             onClick={async () => {
-                                const currentScore = participants.find(p => p.username === "GLOBAL_SETTINGS")?.score || 0;
-                                const newScore = currentScore === 2 ? 0 : 2; // Toggle Blackout
-                                await supabase.from("participants").upsert({
-                                    id: "00000000-0000-0000-0000-000000000000",
-                                    score: newScore,
-                                    username: "GLOBAL_SETTINGS",
-                                    lifelines: 999,
-                                    current_round: 999
-                                });
-                                setIsPaused(newScore !== 0);
-                                fetchParticipants();
-                                toast.info(newScore === 2 ? "BLACKOUT ACTIVATED 🌑" : "BLACKOUT ENDED ☀️");
+                                const newScore = isBlackout ? 0 : 2; // Toggle Blackout
+
+                                const { error } = await supabase
+                                    .from("participants")
+                                    .update({ score: newScore })
+                                    .eq("id", "00000000-0000-0000-0000-000000000000");
+
+                                if (error) toast.error("Blackout Failed");
+                                else {
+                                    setIsPaused(newScore !== 0);
+                                    fetchParticipants(); // Refresh local list to see change
+                                    toast.info(newScore === 2 ? "BLACKOUT ACTIVATED 🌑" : "BLACKOUT ENDED ☀️");
+                                }
                             }}
                             variant="outline"
                             className="border-purple-500 text-purple-500 hover:bg-purple-950"
@@ -241,7 +262,7 @@ const Admin = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* SOUNDBOARD */}
                     <div className="bg-muted/20 p-4 rounded-lg border border-yellow-500/20">
-                        <h3 className="text-yellow-500 font-bold mb-3 flex items-center gap-2">ðŸŽµ LIVE SOUNDBOARD</h3>
+                        <h3 className="text-yellow-500 font-bold mb-3 flex items-center gap-2">ðŸŽµ LIVE SFX</h3>
                         <div className="grid grid-cols-3 gap-2">
                             {[
                                 { verify: 801, label: "🚨 Siren", color: "bg-red-900/50 hover:bg-red-800" },
@@ -254,12 +275,14 @@ const Admin = () => {
                                 <button
                                     key={sound.verify}
                                     onClick={async () => {
-                                        await supabase.from("participants").upsert({
-                                            id: "00000000-0000-0000-0000-000000000000",
-                                            username: "GLOBAL_SETTINGS",
-                                            lifelines: sound.verify // Trigger Sound
-                                        });
-                                        toast.success(`Playing ${sound.label}`);
+                                        // Update ONLY lifelines for sound trigger
+                                        const { error } = await supabase
+                                            .from("participants")
+                                            .update({ lifelines: sound.verify })
+                                            .eq("id", "00000000-0000-0000-0000-000000000000");
+
+                                        if (error) toast.error("Sound failed: " + error.message);
+                                        else toast.success(`Playing ${sound.label}`);
                                     }}
                                     className={`p-2 rounded text-xs font-bold transition-all active:scale-95 ${sound.color}`}
                                 >
@@ -323,7 +346,7 @@ const Admin = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {participants.filter(p => p.username !== "GLOBAL_SETTINGS").map((p) => (
+                            {participants.filter(p => p.id !== "00000000-0000-0000-0000-000000000000").map((p) => (
                                 <TableRow key={p.id}>
                                     <TableCell className="font-medium">{p.username}</TableCell>
                                     <TableCell className="text-xs max-w-[150px] truncate" title={getLocationHint(p.current_round)}>
