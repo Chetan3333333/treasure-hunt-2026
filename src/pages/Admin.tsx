@@ -116,8 +116,7 @@ const Admin = () => {
             await supabase.from("participants").insert({
                 id: "00000000-0000-0000-0000-000000000000",
                 username: "GLOBAL_SETTINGS",
-                score: 0,
-                lifelines: 999
+                score: 0
             });
         } else {
             setIsPaused(data.score === 1);
@@ -132,8 +131,7 @@ const Admin = () => {
             .upsert({
                 id: "00000000-0000-0000-0000-000000000000",
                 score: newStatus ? 1 : 0,
-                username: "GLOBAL_SETTINGS", // Reset name just in case
-                lifelines: 999
+                username: "GLOBAL_SETTINGS" // Reset name just in case
             });
 
         if (error) {
@@ -154,8 +152,7 @@ const Admin = () => {
                 id: "00000000-0000-0000-0000-000000000000",
                 username: `📢 ${broadcastMsg}`,
                 // Preserve existing pause state if possible, or default to current local state
-                score: isPaused ? 1 : 0,
-                lifelines: 999
+                score: isPaused ? 1 : 0
             });
 
         if (error) {
@@ -172,8 +169,7 @@ const Admin = () => {
                 .upsert({
                     id: "00000000-0000-0000-0000-000000000000",
                     username: "GLOBAL_SETTINGS",
-                    score: isPaused ? 1 : 0,
-                    lifelines: 999
+                    score: isPaused ? 1 : 0
                 });
         }, 8000);
 
@@ -200,8 +196,7 @@ const Admin = () => {
             const { error } = await supabase.from("participants").insert({
                 id: "00000000-0000-0000-0000-000000000000",
                 username: "GLOBAL_SETTINGS",
-                score: 0,
-                lifelines: 999
+                score: 0
             });
 
             if (error) throw error;
@@ -240,8 +235,7 @@ const Admin = () => {
                 const { error: createErr } = await supabase.from("participants").insert({
                     id: "00000000-0000-0000-0000-000000000000",
                     username: "GLOBAL_SETTINGS",
-                    score: 0,
-                    lifelines: 999
+                    score: 0
                 });
                 if (createErr) throw new Error("Creation Failed: " + createErr.message);
                 log("✅ Global Row Created.");
@@ -252,7 +246,7 @@ const Admin = () => {
             log("3. Testing Update...");
             const { error: updateErr } = await supabase
                 .from("participants")
-                .update({ lifelines: 999 }) // Update lifelines instead of current_round
+                .update({ score: 99 }) // Update score instead of lifelines/current_round
                 .eq("id", "00000000-0000-0000-0000-000000000000");
 
             if (updateErr) throw new Error("Update Failed: " + updateErr.message);
