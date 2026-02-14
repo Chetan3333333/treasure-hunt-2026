@@ -27,6 +27,8 @@ export interface GameContextType {
   registerParticipant: (name: string) => Promise<void>;
   isPaused: boolean;
   broadcastMessage: string | null;
+  isBlackout: boolean;
+  globalSound: number | null;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -149,6 +151,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [currentRound, lifelines, score, participantId, updateParticipant]);
 
   const [isPaused, setIsPaused] = useState(false);
+  const [isBlackout, setIsBlackout] = useState(false);
+  const [globalSound, setGlobalSound] = useState<number | null>(null);
   const [broadcastMessage, setBroadcastMessage] = useState<string | null>(null);
 
   // Poll for Admin Commands (Force Unlock, Revive, Bonus) AND Global State
@@ -182,19 +186,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 2. Poll Global Settings (Pause, Broadcast)
+      // 2. Poll Global Settings (Pause, Broadcast, Blackout, Sound)
       // We look for a user with the FIXED ID for settings
       const { data: globalData } = await supabase
         .from("participants")
-        .select("score, username")
+        .select("score, username, lifelines")
         .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
         .maybeSingle();
 
       if (globalData) {
+        // SCORE: 0=Live, 1=Paused, 2=Blackout
         const paused = globalData.score === 1;
+        const blackout = globalData.score === 2;
         setIsPaused(paused);
+        setIsBlackout(blackout); // New state
 
-        // If username contains a message format like "MSG:Hello World"
+        // SOUND: Lifelines < 900 means a sound trigger
+        if (globalData.lifelines && globalData.lifelines >= 800 && globalData.lifelines < 900) {
+          setGlobalSound(globalData.lifelines);
+        } else {
+          setGlobalSound(null);
+        }
+
+        // If username contains a message format like "📢 Hello World"
         if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
           setBroadcastMessage(globalData.username);
         } else {
@@ -234,7 +248,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         elapsedSeconds, startGlobalTimer, stopGlobalTimer,
         finalScore, finalTime, finishGame,
         participantId, registerParticipant,
-        isPaused, broadcastMessage
+        isPaused, broadcastMessage,
+        isBlackout, globalSound
       }}
     >
       {children}

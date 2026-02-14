@@ -196,27 +196,116 @@ const Admin = () => {
                         <Button onClick={sendBroadcast} variant="default">SEND</Button>
                     </div>
                     <div className="flex gap-4 items-center justify-end">
-                        <span className="font-mono text-sm">{isPaused ? "STATUS: PAUSED ⏸️" : "STATUS: LIVE 🟢"}</span>
+                        <div className="text-right">
+                            <div className="font-mono text-xs text-muted-foreground">STATUS</div>
+                            <div className={`font-bold ${isPaused ? "text-red-500" : "text-green-500"}`}>
+                                {isPaused ? "PAUSED ⏸️" : (participants.find(p => p.username === "GLOBAL_SETTINGS")?.score === 2 ? "BLACKOUT 🌑" : "LIVE 🟢")}
+                            </div>
+                        </div>
+
+                        {/* Toggle Pause */}
                         <Button
                             onClick={togglePause}
                             variant={isPaused ? "secondary" : "destructive"}
-                        >
-                            {isPaused ? "RESUME GAME ▶️" : "PAUSE GAME ⏸️"}
-                        </Button>
-                        <Button
-                            variant="outline"
                             size="sm"
-                            onClick={async () => {
-                                const { error } = await supabase.from("participants").upsert({
-                                    id: "00000000-0000-0000-0000-000000000000",
-                                    username: "GLOBAL_SETTINGS"
-                                });
-                                if (error) alert("GOD MODE ERROR: " + error.message);
-                                else alert("GOD MODE CONNECTED! ✅");
-                            }}
                         >
-                            Test 🛠️
+                            {isPaused ? "RESUME" : "PAUSE"}
                         </Button>
+
+                        {/* Toggle Blackout (Status 2) */}
+                        <Button
+                            onClick={async () => {
+                                const currentScore = participants.find(p => p.username === "GLOBAL_SETTINGS")?.score || 0;
+                                const newScore = currentScore === 2 ? 0 : 2; // Toggle Blackout
+                                await supabase.from("participants").upsert({
+                                    id: "00000000-0000-0000-0000-000000000000",
+                                    score: newScore,
+                                    username: "GLOBAL_SETTINGS",
+                                    lifelines: 999,
+                                    current_round: 999
+                                });
+                                setIsPaused(newScore !== 0);
+                                fetchParticipants();
+                                toast.info(newScore === 2 ? "BLACKOUT ACTIVATED 🌑" : "BLACKOUT ENDED ☀️");
+                            }}
+                            variant="outline"
+                            className="border-purple-500 text-purple-500 hover:bg-purple-950"
+                            size="sm"
+                        >
+                            BLACKOUT
+                        </Button>
+                    </div>
+                </div>
+
+                {/* ADVANCED ADMIN: Soundboard & Analytics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* SOUNDBOARD */}
+                    <div className="bg-muted/20 p-4 rounded-lg border border-yellow-500/20">
+                        <h3 className="text-yellow-500 font-bold mb-3 flex items-center gap-2">ðŸŽµ LIVE SOUNDBOARD</h3>
+                        <div className="grid grid-cols-3 gap-2">
+                            {[
+                                { verify: 801, label: "🚨 Siren", color: "bg-red-900/50 hover:bg-red-800" },
+                                { verify: 802, label: "🤡 Laugh", color: "bg-purple-900/50 hover:bg-purple-800" },
+                                { verify: 803, label: "👻 Scary", color: "bg-zinc-800 hover:bg-zinc-700" },
+                                { verify: 804, label: "📣 Airhorn", color: "bg-green-900/50 hover:bg-green-800" },
+                                { verify: 805, label: "🏆 Win", color: "bg-yellow-900/50 hover:bg-yellow-800" },
+                                { verify: 999, label: "🔇 Stop", color: "border border-red-500 text-red-500 hover:bg-red-950" },
+                            ].map(sound => (
+                                <button
+                                    key={sound.verify}
+                                    onClick={async () => {
+                                        await supabase.from("participants").upsert({
+                                            id: "00000000-0000-0000-0000-000000000000",
+                                            username: "GLOBAL_SETTINGS",
+                                            lifelines: sound.verify // Trigger Sound
+                                        });
+                                        toast.success(`Playing ${sound.label}`);
+                                    }}
+                                    className={`p-2 rounded text-xs font-bold transition-all active:scale-95 ${sound.color}`}
+                                >
+                                    {sound.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* LIVE ANALYTICS */}
+                    <div className="bg-muted/20 p-4 rounded-lg border border-blue-500/20">
+                        <h3 className="text-blue-500 font-bold mb-3 flex items-center gap-2">📊 LIVE PROGRESS</h3>
+                        <div className="space-y-2">
+                            {[1, 2, 3, 4, 5].map(round => {
+                                const count = participants.filter(p => p.username !== "GLOBAL_SETTINGS" && p.current_round === round && !p.completed).length;
+                                const winners = participants.filter(p => round === 5 && p.completed).length;
+                                const displayCount = round === 5 ? winners : count;
+                                const label = round === 5 ? "🏆 Winners" : `Round ${round}`;
+                                const barColor = round === 5 ? "bg-yellow-500" : "bg-blue-500";
+
+                                return (
+                                    <div key={round} className="flex items-center gap-2 text-xs">
+                                        <div className="w-16 font-mono text-muted-foreground">{label}</div>
+                                        <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full ${barColor} transition-all duration-500`}
+                                                style={{ width: `${(displayCount / (participants.length || 1)) * 100}%` }}
+                                            />
+                                        </div>
+                                        <div className="w-6 text-right font-bold">{displayCount}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* QR CODES CHEAT SHEET */}
+                <div className="p-4 rounded-lg border border-zinc-800 bg-black/20">
+                    <h3 className="text-zinc-500 font-bold mb-2 text-xs uppercase tracking-widest">QR Reference</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-[10px] font-mono text-zinc-400">
+                        <div>R1: library_entrance</div>
+                        <div>R2: cafeteria_main</div>
+                        <div>R3: sports_complex</div>
+                        <div>R4: main_auditorium</div>
+                        <div>R5: admin_block</div>
                     </div>
                 </div>
             </div>
