@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import { locationHints } from "@/data/questions"; // Moved to top
 
 interface Participant {
     id: string;
@@ -14,6 +15,12 @@ interface Participant {
     completed: boolean;
     completion_time: number;
 }
+
+// Helper for location
+const getLocationHint = (round: number) => {
+    if (round > 4) return "Finish Line";
+    return locationHints[round - 1] || "Unknown";
+};
 
 const Admin = () => {
     const [password, setPassword] = useState("");
@@ -26,6 +33,7 @@ const Admin = () => {
         if (password === "admin123") {
             setAuthenticated(true);
             fetchParticipants();
+            checkGlobalSettings(); // Check immediately on login
         } else {
             toast.error("Invalid Password");
         }
@@ -89,6 +97,9 @@ const Admin = () => {
     useEffect(() => {
         if (authenticated) {
             checkGlobalSettings();
+            // Auto-refresh stats every 5s
+            const interval = setInterval(fetchParticipants, 5000);
+            return () => clearInterval(interval);
         }
     }, [authenticated]);
 
@@ -168,22 +179,6 @@ const Admin = () => {
 
         setBroadcastMsg("");
     };
-
-    if (!authenticated) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-                <h1 className="text-xl font-bold">Admin Access</h1>
-                <Input
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Enter Passkey"
-                    className="max-w-xs"
-                />
-                <Button onClick={checkAuth}>Login</Button>
-            </div>
-        );
-    }
 
     // DIAGNOSIS STATE
     const [diagStatus, setDiagStatus] = useState<string>("Ready");
@@ -269,6 +264,22 @@ const Admin = () => {
             setDiagStatus("❌ SYSTEM FAILURE");
         }
     };
+
+    if (!authenticated) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+                <h1 className="text-xl font-bold">Admin Access</h1>
+                <Input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Enter Passkey"
+                    className="max-w-xs"
+                />
+                <Button onClick={checkAuth}>Login</Button>
+            </div>
+        );
+    }
 
     return (
         <div className="p-8 min-h-screen bg-background pb-20">
@@ -383,13 +394,6 @@ const Admin = () => {
             )}
         </div>
     );
-};
-
-// Helper for location
-import { locationHints } from "@/data/questions";
-const getLocationHint = (round: number) => {
-    if (round > 4) return "Finish Line";
-    return locationHints[round - 1] || "Unknown";
 };
 
 export default Admin;
