@@ -76,17 +76,25 @@ const RoundScreen = () => {
     }
   }, [qIndex, questions.length, currentRound, setRoundComplete, finishGame]);
 
-  const handleCorrect = useCallback(() => {
-    addScore(10); // +10 for correct answer
-    setTimeout(() => advanceQuestion(), 600);
+  const handleCorrect = useCallback(async () => {
+    try {
+      addScore(10); // +10 for correct answer
+      setTimeout(() => advanceQuestion(), 600);
+    } catch (e: any) {
+      toast.error("Error saving progress: " + e.message);
+    }
   }, [advanceQuestion, addScore]);
 
-  const handleWrong = useCallback(() => {
-    addScore(-5); // -5 for wrong answer
-    setTimeout(() => {
-      const alive = loseLifeline();
-      if (alive) advanceQuestion();
-    }, 600);
+  const handleWrong = useCallback(async () => {
+    try {
+      addScore(-5); // -5 for wrong answer
+      setTimeout(() => {
+        const alive = loseLifeline();
+        if (alive) advanceQuestion();
+      }, 600);
+    } catch (e: any) {
+      toast.error("Error checking lifelines: " + e.message);
+    }
   }, [loseLifeline, advanceQuestion, addScore]);
 
   const handleTimeout = useCallback(() => {

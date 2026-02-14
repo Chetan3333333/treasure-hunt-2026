@@ -188,32 +188,40 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // 2. Poll Global Settings (Pause, Broadcast, Blackout, Sound)
       // We look for a user with the FIXED ID for settings
-      const { data: globalData } = await supabase
-        .from("participants")
-        .select("score, username, lifelines")
-        .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
-        .maybeSingle();
+      // 2. Poll Global Settings (Pause, Broadcast, Blackout, Sound)
+      try {
+        const { data: globalData, error: globalErr } = await supabase
+          .from("participants")
+          .select("score, username, lifelines") // Try selecting all, but handle error
+          .eq("id", "00000000-0000-0000-0000-000000000000")
+          .maybeSingle();
 
-      if (globalData) {
-        // SCORE: 0=Live, 1=Paused, 2=Blackout
-        const paused = globalData.score === 1;
-        const blackout = globalData.score === 2;
-        setIsPaused(paused);
-        setIsBlackout(blackout); // New state
+        if (globalErr) {
+          console.error("Global Poll Error:", globalErr.message);
+          // Do not throw, just skip this poll
+        } else if (globalData) {
+          // SCORE: 0=Live, 1=Paused, 2=Blackout
+          const paused = globalData.score === 1;
+          const blackout = globalData.score === 2;
+          setIsPaused(paused);
+          setIsBlackout(blackout);
 
-        // SOUND: Lifelines < 900 means a sound trigger
-        if (globalData.lifelines && globalData.lifelines >= 800 && globalData.lifelines < 900) {
-          setGlobalSound(globalData.lifelines);
-        } else {
-          setGlobalSound(null);
+          // SOUND: Lifelines < 900 means a sound trigger
+          if (globalData.lifelines && globalData.lifelines >= 800 && globalData.lifelines < 900) {
+            setGlobalSound(globalData.lifelines);
+          } else {
+            setGlobalSound(null);
+          }
+
+          // If username contains a message format like "📢 Hello World"
+          if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
+            setBroadcastMessage(globalData.username);
+          } else {
+            setBroadcastMessage(null);
+          }
         }
-
-        // If username contains a message format like "📢 Hello World"
-        if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
-          setBroadcastMessage(globalData.username);
-        } else {
-          setBroadcastMessage(null); // Clear message if reset
-        }
+      } catch (e) {
+        console.error("Critical Poll Error", e);
       }
 
     }, 3000);
