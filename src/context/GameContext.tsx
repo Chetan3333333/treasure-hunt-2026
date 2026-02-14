@@ -177,7 +177,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Sync lifelines (Revive)
           if (userData.lifelines > lifelines) {
             setLifelines(userData.lifelines);
-            if (gameState === "eliminated") setGameState("round"); // REVIVED!
+            if (gameState === "eliminated" || gameState === "login") setGameState("round"); // REVIVED!
           }
           // Sync Score (Bonus/Penalty)
           if (userData.score !== score) {

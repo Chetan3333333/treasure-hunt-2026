@@ -111,7 +111,7 @@ const Admin = () => {
                 current_round: 999
             });
         } else {
-            setIsPaused(data.score === 1);
+            setIsPaused(data.score === 1 || data.score === 2);
         }
     };
 
@@ -308,57 +308,57 @@ const Admin = () => {
                         <div>R5: admin_block</div>
                     </div>
                 </div>
-            </div>
 
-            {loading ? <p>Loading...</p> : (
-                <Table className="border rounded-md bg-card/50">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Username</TableHead>
-                            <TableHead>Location</TableHead>
-                            <TableHead>Round</TableHead>
-                            <TableHead>Score</TableHead>
-                            <TableHead>Lifelines</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>God Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {participants.filter(p => p.username !== "GLOBAL_SETTINGS").map((p) => (
-                            <TableRow key={p.id}>
-                                <TableCell className="font-medium">{p.username}</TableCell>
-                                <TableCell className="text-xs max-w-[150px] truncate" title={getLocationHint(p.current_round)}>
-                                    {getLocationHint(p.current_round)}
-                                </TableCell>
-                                <TableCell>R{p.current_round}</TableCell>
-                                <TableCell>
-                                    <div className="flex items-center gap-1">
-                                        {p.score}
-                                        <div className="flex flex-col">
-                                            <button onClick={() => adjustScore(p.id, p.score, 10)} className="text-[10px] bg-green-900 px-1 rounded hover:bg-green-700">▲</button>
-                                            <button onClick={() => adjustScore(p.id, p.score, -10)} className="text-[10px] bg-red-900 px-1 rounded hover:bg-red-700">▼</button>
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>{p.lifelines}</TableCell>
-                                <TableCell>{p.completed ? "🏆 WINNER" : (p.lifelines <= 0 ? "💀 DEAD" : "ALIVE")}</TableCell>
-                                <TableCell className="flex gap-2">
-                                    {!p.completed && p.lifelines > 0 && (
-                                        <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => forceNextRound(p.id, p.current_round)}>
-                                            Skip ⏩
-                                        </Button>
-                                    )}
-                                    {p.lifelines <= 0 && (
-                                        <Button size="sm" variant="outline" className="h-7 text-xs border-green-500 text-green-500 hover:bg-green-900" onClick={() => revivePlayer(p.id)}>
-                                            Revive ❤️
-                                        </Button>
-                                    )}
-                                </TableCell>
+                {loading ? <p>Loading...</p> : (
+                    <Table className="border rounded-md bg-card/50">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Username</TableHead>
+                                <TableHead>Location</TableHead>
+                                <TableHead>Round</TableHead>
+                                <TableHead>Score</TableHead>
+                                <TableHead>Lifelines</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>God Actions</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            )}
+                        </TableHeader>
+                        <TableBody>
+                            {participants.filter(p => p.username !== "GLOBAL_SETTINGS").map((p) => (
+                                <TableRow key={p.id}>
+                                    <TableCell className="font-medium">{p.username}</TableCell>
+                                    <TableCell className="text-xs max-w-[150px] truncate" title={getLocationHint(p.current_round)}>
+                                        {getLocationHint(p.current_round)}
+                                    </TableCell>
+                                    <TableCell>R{p.current_round}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-1">
+                                            {p.score}
+                                            <div className="flex flex-col">
+                                                <button onClick={() => adjustScore(p.id, p.score, 10)} className="text-[10px] bg-green-900 px-1 rounded hover:bg-green-700">▲</button>
+                                                <button onClick={() => adjustScore(p.id, p.score, -10)} className="text-[10px] bg-red-900 px-1 rounded hover:bg-red-700">▼</button>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{p.lifelines}</TableCell>
+                                    <TableCell>{p.completed ? "🏆 WINNER" : (p.lifelines <= 0 ? "💀 DEAD" : "ALIVE")}</TableCell>
+                                    <TableCell className="flex gap-2">
+                                        {!p.completed && p.lifelines > 0 && (
+                                            <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => forceNextRound(p.id, p.current_round)}>
+                                                Skip ⏩
+                                            </Button>
+                                        )}
+                                        {p.lifelines <= 0 && (
+                                            <Button size="sm" variant="outline" className="h-7 text-xs border-green-500 text-green-500 hover:bg-green-900" onClick={() => revivePlayer(p.id)}>
+                                                Revive ❤️
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+            </div>
         </div>
     );
 };
