@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export type GameState = "login" | "qr-scan" | "round" | "hint" | "winner" | "eliminated";
 
@@ -60,10 +61,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .single();
     if (error) {
       console.error("Error registering participant:", error);
+      toast.error("Login Failed: " + error.message);
       return;
     }
     setParticipantId(data.id);
     setUsername(name);
+    // Explicitly set state to round/qr-scan if not already? 
+    // Usually LoginScreen does this, but let's see.
   }, []);
 
   const addScore = useCallback((points: number) => {

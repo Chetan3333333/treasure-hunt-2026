@@ -15,10 +15,10 @@ const QRScanScreen = () => {
 
   const handleScan = (result: string) => {
     if (result) {
-      playSound("scan");
+      playSound("click");
       const expectedPassword = roundPasswords[currentRound];
       if (result === expectedPassword) {
-        playSound("correct");
+        playSound("success");
         toast.success("Access Granted! Proceeding to next round.");
         setGameState("round");
       } else {
