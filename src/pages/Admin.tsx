@@ -106,8 +106,7 @@ const Admin = () => {
                 id: "00000000-0000-0000-0000-000000000000",
                 username: "GLOBAL_SETTINGS",
                 score: 0,
-                lifelines: 999,
-                current_round: 999
+                lifelines: 999
             });
         } else {
             setIsPaused(data.score === 1);
@@ -123,8 +122,7 @@ const Admin = () => {
                 id: "00000000-0000-0000-0000-000000000000",
                 score: newStatus ? 1 : 0,
                 username: "GLOBAL_SETTINGS", // Reset name just in case
-                lifelines: 999,
-                current_round: 999
+                lifelines: 999
             });
 
         if (error) {
@@ -146,8 +144,7 @@ const Admin = () => {
                 username: `📢 ${broadcastMsg}`,
                 // Preserve existing pause state if possible, or default to current local state
                 score: isPaused ? 1 : 0,
-                lifelines: 999,
-                current_round: 999
+                lifelines: 999
             });
 
         if (error) {
@@ -165,8 +162,7 @@ const Admin = () => {
                     id: "00000000-0000-0000-0000-000000000000",
                     username: "GLOBAL_SETTINGS",
                     score: isPaused ? 1 : 0,
-                    lifelines: 999,
-                    current_round: 999
+                    lifelines: 999
                 });
         }, 8000);
 
@@ -193,6 +189,36 @@ const Admin = () => {
     const [diagStatus, setDiagStatus] = useState<string>("Ready");
     const [diagLogs, setDiagLogs] = useState<string[]>([]);
 
+    const repairGodMode = async () => {
+        if (!confirm("This will RESET the Global Admin Controller. Continue?")) return;
+        setDiagStatus("Repairing...");
+        const log = (msg: string) => setDiagLogs(prev => [...prev, msg]);
+
+        try {
+            log("🛑 Deleting old settings...");
+            // Delete by ID
+            await supabase.from("participants").delete().eq("id", "00000000-0000-0000-0000-000000000000");
+            // Delete by Name (cleanup duplicates)
+            await supabase.from("participants").delete().eq("username", "GLOBAL_SETTINGS");
+
+            log("✨ Creating fresh controller...");
+            const { error } = await supabase.from("participants").insert({
+                id: "00000000-0000-0000-0000-000000000000",
+                username: "GLOBAL_SETTINGS",
+                score: 0,
+                lifelines: 999
+            });
+
+            if (error) throw error;
+            log("✅ REPAIR COMPLETE. Try the buttons now!");
+            setDiagStatus("✅ REPAIRED");
+            checkGlobalSettings();
+        } catch (e: any) {
+            log("❌ Repair Failed: " + e.message);
+            setDiagStatus("❌ FAILED");
+        }
+    };
+
     const runDiagnosis = async () => {
         setDiagStatus("Running...");
         setDiagLogs([]);
@@ -215,13 +241,12 @@ const Admin = () => {
             if (fetchErr) throw new Error("Fetch Failed: " + fetchErr.message);
 
             if (!globalRow) {
-                log("⚠️ Global Row MISSING. Attempting creation...");
+                log("⚠️ Global Row MISSING. Attempting to create...");
                 const { error: createErr } = await supabase.from("participants").insert({
                     id: "00000000-0000-0000-0000-000000000000",
                     username: "GLOBAL_SETTINGS",
                     score: 0,
-                    lifelines: 999,
-                    current_round: 999
+                    lifelines: 999
                 });
                 if (createErr) throw new Error("Creation Failed: " + createErr.message);
                 log("✅ Global Row Created.");
@@ -232,15 +257,15 @@ const Admin = () => {
             log("3. Testing Update...");
             const { error: updateErr } = await supabase
                 .from("participants")
-                .update({ current_round: 999 }) // Harmless update
+                .update({ lifelines: 999 }) // Update lifelines instead of current_round
                 .eq("id", "00000000-0000-0000-0000-000000000000");
 
             if (updateErr) throw new Error("Update Failed: " + updateErr.message);
             log("✅ Update Verified.");
 
-            setDiagStatus("✅ SYSTEM OPTIMAL");
+            setDiagStatus("✅ DIAGNOSIS DONE");
         } catch (e: any) {
-            log("❌ ERROR: " + e.message);
+            log("❌ ERROR: " + e.message + " (Check Supabase Dashboard > Table Editor > participants)");
             setDiagStatus("❌ SYSTEM FAILURE");
         }
     };
@@ -251,7 +276,10 @@ const Admin = () => {
             <div className="mb-8 p-4 border border-zinc-700 rounded bg-zinc-900/50">
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="font-bold text-zinc-400">🔧 SYSTEM DIAGNOSTICS</h3>
-                    <Button onClick={runDiagnosis} size="sm" variant="outline">RUN CHECK</Button>
+                    <div className="flex gap-2">
+                        <Button onClick={repairGodMode} size="sm" variant="destructive">⚠️ REPAIR GOD MODE</Button>
+                        <Button onClick={runDiagnosis} size="sm" variant="outline">RUN CHECK</Button>
+                    </div>
                 </div>
                 <div className="font-mono text-xs text-green-400 bg-black p-2 rounded h-32 overflow-y-auto border border-zinc-800">
                     <div className="text-zinc-500">Status: {diagStatus}</div>
