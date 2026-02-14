@@ -278,19 +278,7 @@ const Admin = () => {
     return (
         <div className="p-8 min-h-screen bg-background pb-20">
             {/* DIAGNOSIS PANEL */}
-            <div className="mb-8 p-4 border border-zinc-700 rounded bg-zinc-900/50">
-                <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-bold text-zinc-400">🔧 SYSTEM DIAGNOSTICS</h3>
-                    <div className="flex gap-2">
-                        <Button onClick={repairGodMode} size="sm" variant="destructive">⚠️ REPAIR GOD MODE</Button>
-                        <Button onClick={runDiagnosis} size="sm" variant="outline">RUN CHECK</Button>
-                    </div>
-                </div>
-                <div className="font-mono text-xs text-green-400 bg-black p-2 rounded h-32 overflow-y-auto border border-zinc-800">
-                    <div className="text-zinc-500">Status: {diagStatus}</div>
-                    {diagLogs.map((l, i) => <div key={i}>{l}</div>)}
-                </div>
-            </div>
+
 
             <div className="flex flex-col gap-6 mb-8">
                 <div className="flex justify-between items-center">

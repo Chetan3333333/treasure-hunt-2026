@@ -16,23 +16,24 @@ const QuestionCard = ({ question, options, correctIndex, onCorrect, onWrong, ima
   const [answered, setAnswered] = useState(false);
 
   const handleSelect = (idx: number) => {
-    // Debug toast
-    // import { toast } from "sonner"; // Ensure this is imported if not already, but safely assuming context usage or adding it.
-    // Actually, let's just use console for now, but the user can't see console.
-    // Use alert for immediate feedback on mobile if desperate? No, toast is better.
-    // We will assume toast is available in parent, but here we can just add a visual indicator.
+    try {
+      if (answered) return;
+      setSelected(idx);
+      setAnswered(true);
 
-    if (answered) return;
-    setSelected(idx);
-    setAnswered(true);
-
-    setTimeout(() => {
-      if (idx === correctIndex) {
-        onCorrect();
-      } else {
-        onWrong();
-      }
-    }, 800);
+      setTimeout(() => {
+        if (idx === correctIndex) {
+          onCorrect();
+        } else {
+          onWrong();
+        }
+      }, 800);
+    } catch (e) {
+      console.error("Selection Error", e);
+      // Fallback
+      if (idx === correctIndex) onCorrect();
+      else onWrong();
+    }
   };
 
   return (

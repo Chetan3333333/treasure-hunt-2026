@@ -166,11 +166,7 @@ const RoundScreen = () => {
           image={currentQ.image}
         />
       </div>
-      <div className="px-4 pb-4 w-full max-w-lg mx-auto">
-        <div className="bg-black/50 p-2 rounded text-[10px] font-mono text-zinc-500 overflow-hidden">
-          DEBUG: {currentQ ? "Q Loaded" : "No Q"} | Timer: {timerStarted ? "Running" : "Stopped"}
-        </div>
-      </div>
+
     </div>
   );
 };
