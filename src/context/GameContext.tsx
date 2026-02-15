@@ -3,6 +3,8 @@ import { supabase } from "@/lib/supabase";
 
 export type GameState = "login" | "qr-scan" | "round" | "hint" | "winner" | "eliminated";
 
+const GLOBAL_ID = "00000000-0000-0000-0000-000000000000";
+
 export interface GameContextType {
   username: string;
   setUsername: (name: string) => void;
@@ -51,9 +53,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const registerParticipant = useCallback(async (name: string) => {
+    // Only use columns that EXIST in the DB: id, username, score, completion_time, completed
     const { data, error } = await supabase
       .from("participants")
-      .insert({ username: name, score: 0, completion_time: null, completed: false, current_round: 1, lifelines: 4 })
+      .insert({ username: name, score: 0, completion_time: null, completed: false })
       .select("id")
       .single();
     if (error) {
@@ -90,7 +93,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const total = s + lifelineBonus;
         setFinalScore(total);
 
-        // Update Supabase with final results
+        // Update Supabase with final results (only existing columns)
         setParticipantId(currentId => {
           if (currentId) {
             supabase
@@ -132,80 +135,54 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setScore(prev => prev + 10);
   }, []);
 
-  const updateParticipant = useCallback(async (updates: any) => {
+  // Sync score to DB when it changes (only use existing columns!)
+  const updateParticipantScore = useCallback(async (newScore: number) => {
     if (!participantId) return;
     const { error } = await supabase
       .from("participants")
-      .update(updates)
+      .update({ score: newScore })
       .eq("id", participantId);
-    if (error) console.error("Error updating participant:", error);
+    if (error) console.error("Error updating score:", error);
   }, [participantId]);
 
-  // Sync Round Changes to DB
   React.useEffect(() => {
-    if (participantId) {
-      updateParticipant({ current_round: currentRound, lifelines: lifelines, score: score });
+    if (participantId && score > 0) {
+      updateParticipantScore(score);
     }
-  }, [currentRound, lifelines, score, participantId, updateParticipant]);
+  }, [score, participantId, updateParticipantScore]);
 
   const [isPaused, setIsPaused] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState<string | null>(null);
 
-  // Poll for Admin Commands (Force Unlock, Revive, Bonus) AND Global State
+  // Poll for Global State (Pause, Broadcast) — uses ONLY score + username columns
   React.useEffect(() => {
-    // Poll Global State (Participant ID: 00000000-0000-0000-0000-000000000000)
-    // We use a specific ID or just filter by username 'GLOBAL_SETTINGS' if ID is dynamic.
-
     const pollInterval = setInterval(async () => {
-      // 1. Poll User Data (Revive, Unlock, Score)
-      if (participantId && gameState !== "winner" && gameState !== "eliminated") {
-        const { data: userData } = await supabase
-          .from("participants")
-          .select("current_round, lifelines, score")
-          .eq("id", participantId)
-          .single();
-
-        if (userData) {
-          if (userData.current_round > currentRound) {
-            setCurrentRound(userData.current_round);
-            setGameState("qr-scan");
-          }
-          // Sync lifelines (Revive)
-          if (userData.lifelines > lifelines) {
-            setLifelines(userData.lifelines);
-            if (gameState === "eliminated") setGameState("round"); // REVIVED!
-          }
-          // Sync Score (Bonus/Penalty)
-          if (userData.score !== score) {
-            setScore(userData.score);
-          }
-        }
-      }
-
-      // 2. Poll Global Settings (Pause, Broadcast)
-      // We look for a user with the FIXED ID for settings
-      const { data: globalData } = await supabase
+      // Poll Global Settings (Pause, Broadcast)
+      const { data: globalData, error } = await supabase
         .from("participants")
         .select("score, username")
-        .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
+        .eq("id", GLOBAL_ID)
         .maybeSingle();
+
+      if (error) {
+        // Don't spam console — row might not exist yet
+        return;
+      }
 
       if (globalData) {
         const paused = globalData.score === 1;
         setIsPaused(paused);
 
-        // If username contains a message format like "MSG:Hello World"
         if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
           setBroadcastMessage(globalData.username);
         } else {
-          setBroadcastMessage(null); // Clear message if reset
+          setBroadcastMessage(null);
         }
       }
-
     }, 3000);
 
     return () => clearInterval(pollInterval);
-  }, [participantId, currentRound, gameState, lifelines, score]);
+  }, []); // No dependencies — runs once, polls forever
 
   const resetGame = useCallback(() => {
     stopGlobalTimer();

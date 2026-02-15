@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { locationHints } from "@/data/questions";
 
 const GLOBAL_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -12,16 +11,9 @@ interface Participant {
     id: string;
     username: string;
     score: number;
-    current_round: number;
-    lifelines: number;
     completed: boolean;
-    completion_time: number;
+    completion_time: number | null;
 }
-
-const getLocationHint = (round: number) => {
-    if (round > 4) return "Finish Line";
-    return locationHints[round - 1] || "Unknown";
-};
 
 const Admin = () => {
     const [password, setPassword] = useState("");
@@ -42,22 +34,22 @@ const Admin = () => {
 
     const fetchParticipants = async () => {
         setLoading(true);
+        // Only select columns that EXIST in the DB
         const { data, error } = await supabase
             .from("participants")
-            .select("*")
+            .select("id, username, score, completed, completion_time")
             .order("score", { ascending: false });
 
         if (error) {
             toast.error("Failed to fetch data");
-            console.error(error);
+            console.error("Fetch error:", error);
         } else {
-            setParticipants(data);
+            setParticipants(data || []);
         }
         setLoading(false);
     };
 
     // ============ GLOBAL SETTINGS ROW ============
-    // Ensure the GLOBAL_SETTINGS row exists with the fixed ID
     useEffect(() => {
         if (authenticated) {
             ensureGlobalSettings();
@@ -65,10 +57,9 @@ const Admin = () => {
     }, [authenticated]);
 
     const ensureGlobalSettings = async () => {
-        // First, try to read the row by ID
         const { data, error: readError } = await supabase
             .from("participants")
-            .select("*")
+            .select("id, username, score")
             .eq("id", GLOBAL_ID)
             .maybeSingle();
 
@@ -79,27 +70,25 @@ const Admin = () => {
         }
 
         if (!data) {
-            // Row doesn't exist — try to create it with fixed ID
+            // Create GLOBAL_SETTINGS row — only use existing columns
             const { error: insertError } = await supabase
                 .from("participants")
                 .insert({
                     id: GLOBAL_ID,
                     username: "GLOBAL_SETTINGS",
                     score: 0,
-                    lifelines: 999,
-                    current_round: 999,
                     completed: false,
                 });
 
             if (insertError) {
-                console.error("Error creating global settings row:", insertError);
-                toast.error("Failed to create global settings row. Check console.");
+                console.error("Insert error:", insertError);
+                toast.error("Failed to create settings row: " + insertError.message);
             } else {
-                toast.success("Global settings row created ✅");
+                toast.success("Global settings created ✅");
             }
         } else {
             setIsPaused(data.score === 1);
-            toast.success("Global settings loaded ✅");
+            console.log("Global settings loaded:", data);
         }
     };
 
@@ -118,24 +107,6 @@ const Admin = () => {
             toast.success("Game Reset for Everyone");
             fetchParticipants();
         }
-    };
-
-    const forceNextRound = async (id: string, currentRound: number) => {
-        const { error } = await supabase
-            .from("participants")
-            .update({ current_round: currentRound + 1 })
-            .eq("id", id);
-        if (error) toast.error("Failed to unlock");
-        else { toast.success(`Unlocked Round ${currentRound + 1}`); fetchParticipants(); }
-    };
-
-    const revivePlayer = async (id: string) => {
-        const { error } = await supabase
-            .from("participants")
-            .update({ lifelines: 4, completed: false })
-            .eq("id", id);
-        if (error) toast.error("Revive failed");
-        else { toast.success("Player Revived! ❤️"); fetchParticipants(); }
     };
 
     const adjustScore = async (id: string, currentScore: number, amount: number) => {
@@ -157,7 +128,7 @@ const Admin = () => {
 
         if (error) {
             console.error("Pause toggle error:", error);
-            toast.error("Pause toggle failed! Check console.");
+            toast.error("Pause toggle failed!");
         } else {
             setIsPaused(newStatus);
             toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
@@ -172,7 +143,6 @@ const Admin = () => {
 
         const message = `📢 ${broadcastMsg.trim()}`;
 
-        // Step 1: Write the broadcast message to GLOBAL_SETTINGS username
         const { error } = await supabase
             .from("participants")
             .update({ username: message })
@@ -180,23 +150,19 @@ const Admin = () => {
 
         if (error) {
             console.error("Broadcast send error:", error);
-            toast.error("Broadcast failed! Check console.");
+            toast.error("Broadcast failed: " + error.message);
             return;
         }
 
         toast.success("📢 Broadcast Sent!");
         setBroadcastMsg("");
 
-        // Step 2: Reset username back to GLOBAL_SETTINGS after 10s
+        // Reset username back after 10s
         setTimeout(async () => {
-            const { error: resetError } = await supabase
+            await supabase
                 .from("participants")
                 .update({ username: "GLOBAL_SETTINGS" })
                 .eq("id", GLOBAL_ID);
-
-            if (resetError) {
-                console.error("Broadcast reset error:", resetError);
-            }
         }, 10000);
     };
 
@@ -218,7 +184,7 @@ const Admin = () => {
         );
     }
 
-    // Filter out the GLOBAL_SETTINGS row by ID (not by username!)
+    // Filter out the GLOBAL_SETTINGS row by ID
     const realParticipants = participants.filter(p => p.id !== GLOBAL_ID);
 
     return (
@@ -260,22 +226,15 @@ const Admin = () => {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Username</TableHead>
-                            <TableHead>Location</TableHead>
-                            <TableHead>Round</TableHead>
                             <TableHead>Score</TableHead>
-                            <TableHead>Lifelines</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead>God Actions</TableHead>
+                            <TableHead>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {realParticipants.map((p) => (
                             <TableRow key={p.id}>
                                 <TableCell className="font-medium">{p.username}</TableCell>
-                                <TableCell className="text-xs max-w-[150px] truncate" title={getLocationHint(p.current_round)}>
-                                    {getLocationHint(p.current_round)}
-                                </TableCell>
-                                <TableCell>R{p.current_round}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-1">
                                         {p.score}
@@ -285,19 +244,11 @@ const Admin = () => {
                                         </div>
                                     </div>
                                 </TableCell>
-                                <TableCell>{p.lifelines}</TableCell>
-                                <TableCell>{p.completed ? "🏆 WINNER" : (p.lifelines <= 0 ? "💀 DEAD" : "ALIVE")}</TableCell>
-                                <TableCell className="flex gap-2">
-                                    {!p.completed && p.lifelines > 0 && (
-                                        <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => forceNextRound(p.id, p.current_round)}>
-                                            Skip ⏩
-                                        </Button>
-                                    )}
-                                    {p.lifelines <= 0 && (
-                                        <Button size="sm" variant="outline" className="h-7 text-xs border-green-500 text-green-500 hover:bg-green-900" onClick={() => revivePlayer(p.id)}>
-                                            Revive ❤️
-                                        </Button>
-                                    )}
+                                <TableCell>{p.completed ? "🏆 WINNER" : "PLAYING"}</TableCell>
+                                <TableCell>
+                                    <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => adjustScore(p.id, p.score, 10)}>
+                                        +10 🪙
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
