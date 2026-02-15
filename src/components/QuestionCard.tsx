@@ -16,24 +16,16 @@ const QuestionCard = ({ question, options, correctIndex, onCorrect, onWrong, ima
   const [answered, setAnswered] = useState(false);
 
   const handleSelect = (idx: number) => {
-    try {
-      if (answered) return;
-      setSelected(idx);
-      setAnswered(true);
-
-      setTimeout(() => {
-        if (idx === correctIndex) {
-          onCorrect();
-        } else {
-          onWrong();
-        }
-      }, 800);
-    } catch (e) {
-      console.error("Selection Error", e);
-      // Fallback
-      if (idx === correctIndex) onCorrect();
-      else onWrong();
-    }
+    if (answered) return;
+    setSelected(idx);
+    setAnswered(true);
+    setTimeout(() => {
+      if (idx === correctIndex) {
+        onCorrect();
+      } else {
+        onWrong();
+      }
+    }, 800);
   };
 
   return (

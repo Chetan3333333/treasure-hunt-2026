@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { locationHints } from "@/data/questions";
+import GameHeader from "@/components/GameHeader";
 
 interface Participant {
     id: string;
@@ -15,12 +15,6 @@ interface Participant {
     completed: boolean;
     completion_time: number;
 }
-
-// Helper for location
-const getLocationHint = (round: number) => {
-    if (round > 4) return "Finish Line";
-    return locationHints[round - 1] || "Unknown";
-};
 
 const Admin = () => {
     const [password, setPassword] = useState("");
@@ -33,7 +27,6 @@ const Admin = () => {
         if (password === "admin123") {
             setAuthenticated(true);
             fetchParticipants();
-            checkGlobalSettings(); // Check immediately on login
         } else {
             toast.error("Invalid Password");
         }
@@ -97,9 +90,6 @@ const Admin = () => {
     useEffect(() => {
         if (authenticated) {
             checkGlobalSettings();
-            // Auto-refresh stats every 5s
-            const interval = setInterval(fetchParticipants, 5000);
-            return () => clearInterval(interval);
         }
     }, [authenticated]);
 
@@ -116,7 +106,9 @@ const Admin = () => {
             await supabase.from("participants").insert({
                 id: "00000000-0000-0000-0000-000000000000",
                 username: "GLOBAL_SETTINGS",
-                score: 0
+                score: 0,
+                lifelines: 999,
+                current_round: 999
             });
         } else {
             setIsPaused(data.score === 1);
@@ -131,7 +123,9 @@ const Admin = () => {
             .upsert({
                 id: "00000000-0000-0000-0000-000000000000",
                 score: newStatus ? 1 : 0,
-                username: "GLOBAL_SETTINGS" // Reset name just in case
+                username: "GLOBAL_SETTINGS", // Reset name just in case
+                lifelines: 999,
+                current_round: 999
             });
 
         if (error) {
@@ -145,20 +139,11 @@ const Admin = () => {
     const sendBroadcast = async () => {
         if (!broadcastMsg) return;
 
-        // 1. Send Message via UPSERT (creates row if missing)
-        const { error } = await supabase
+        // 1. Send Message by changing username
+        await supabase
             .from("participants")
-            .upsert({
-                id: "00000000-0000-0000-0000-000000000000",
-                username: `📢 ${broadcastMsg}`,
-                // Preserve existing pause state if possible, or default to current local state
-                score: isPaused ? 1 : 0
-            });
-
-        if (error) {
-            toast.error("Broadcast failed: " + error.message);
-            return;
-        }
+            .update({ username: `📢 ${broadcastMsg}` })
+            .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
 
         toast.success("Broadcast Sent!");
 
@@ -166,97 +151,11 @@ const Admin = () => {
         setTimeout(async () => {
             await supabase
                 .from("participants")
-                .upsert({
-                    id: "00000000-0000-0000-0000-000000000000",
-                    username: "GLOBAL_SETTINGS",
-                    score: isPaused ? 1 : 0
-                });
+                .update({ username: "GLOBAL_SETTINGS" })
+                .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
         }, 8000);
 
         setBroadcastMsg("");
-    };
-
-    // DIAGNOSIS STATE
-    const [diagStatus, setDiagStatus] = useState<string>("Ready");
-    const [diagLogs, setDiagLogs] = useState<string[]>([]);
-
-    const repairGodMode = async () => {
-        if (!confirm("This will RESET the Global Admin Controller. Continue?")) return;
-        setDiagStatus("Repairing...");
-        const log = (msg: string) => setDiagLogs(prev => [...prev, msg]);
-
-        try {
-            log("🛑 Deleting old settings...");
-            // Delete by ID
-            await supabase.from("participants").delete().eq("id", "00000000-0000-0000-0000-000000000000");
-            // Delete by Name (cleanup duplicates)
-            await supabase.from("participants").delete().eq("username", "GLOBAL_SETTINGS");
-
-            log("✨ Creating fresh controller...");
-            const { error } = await supabase.from("participants").insert({
-                id: "00000000-0000-0000-0000-000000000000",
-                username: "GLOBAL_SETTINGS",
-                score: 0
-            });
-
-            if (error) throw error;
-            log("✅ REPAIR COMPLETE. Try the buttons now!");
-            setDiagStatus("✅ REPAIRED");
-            checkGlobalSettings();
-        } catch (e: any) {
-            log("❌ Repair Failed: " + e.message);
-            setDiagStatus("❌ FAILED");
-        }
-    };
-
-    const runDiagnosis = async () => {
-        setDiagStatus("Running...");
-        setDiagLogs([]);
-        const logs: string[] = [];
-        const log = (msg: string) => { logs.push(msg); setDiagLogs([...logs]); };
-
-        try {
-            log("1. Checking Supabase Connection...");
-            const { count, error: countErr } = await supabase.from("participants").select("*", { count: "exact", head: true });
-            if (countErr) throw new Error("Connection Failed: " + countErr.message);
-            log(`✅ Connected. Rows: ${count}`);
-
-            log("2. Checking Global Settings Row...");
-            const { data: globalRow, error: fetchErr } = await supabase
-                .from("participants")
-                .select("*")
-                .eq("id", "00000000-0000-0000-0000-000000000000")
-                .maybeSingle();
-
-            if (fetchErr) throw new Error("Fetch Failed: " + fetchErr.message);
-
-            if (!globalRow) {
-                log("⚠️ Global Row MISSING. Attempting to create...");
-                const { error: createErr } = await supabase.from("participants").insert({
-                    id: "00000000-0000-0000-0000-000000000000",
-                    username: "GLOBAL_SETTINGS",
-                    score: 0
-                });
-                if (createErr) throw new Error("Creation Failed: " + createErr.message);
-                log("✅ Global Row Created.");
-            } else {
-                log(`✅ Global Row READY. Score: ${globalRow.score}, Name: ${globalRow.username}`);
-            }
-
-            log("3. Testing Update...");
-            const { error: updateErr } = await supabase
-                .from("participants")
-                .update({ score: 99 }) // Update score instead of lifelines/current_round
-                .eq("id", "00000000-0000-0000-0000-000000000000");
-
-            if (updateErr) throw new Error("Update Failed: " + updateErr.message);
-            log("✅ Update Verified.");
-
-            setDiagStatus("✅ DIAGNOSIS DONE");
-        } catch (e: any) {
-            log("❌ ERROR: " + e.message + " (Check Supabase Dashboard > Table Editor > participants)");
-            setDiagStatus("❌ SYSTEM FAILURE");
-        }
     };
 
     if (!authenticated) {
@@ -277,9 +176,6 @@ const Admin = () => {
 
     return (
         <div className="p-8 min-h-screen bg-background pb-20">
-            {/* DIAGNOSIS PANEL */}
-
-
             <div className="flex flex-col gap-6 mb-8">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold neon-text">Game Control Center</h1>
@@ -376,6 +272,13 @@ const Admin = () => {
             )}
         </div>
     );
+};
+
+// Helper for location
+import { locationHints } from "@/data/questions";
+const getLocationHint = (round: number) => {
+    if (round > 4) return "Finish Line";
+    return locationHints[round - 1] || "Unknown";
 };
 
 export default Admin;

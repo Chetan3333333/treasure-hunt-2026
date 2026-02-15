@@ -1,17 +1,13 @@
 import { useGame } from "@/context/GameContext";
-import { useSound } from "@/context/SoundContext";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const GlobalOverlay = () => {
-    const { isPaused, broadcastMessage, isBlackout, globalSound } = useGame();
-    const { playSound } = useSound();
+    const { isPaused, broadcastMessage } = useGame();
 
     // Local state to prevent duplicate toasts for same message
     const [lastMessage, setLastMessage] = useState<string | null>(null);
-    const [lastSound, setLastSound] = useState<number | null>(null);
 
-    // Handle Broadcasts
     useEffect(() => {
         if (broadcastMessage && broadcastMessage !== lastMessage) {
             // Message format: "📢 Actual Text"
@@ -28,34 +24,8 @@ const GlobalOverlay = () => {
                 position: "top-center"
             });
             setLastMessage(broadcastMessage);
-            playSound("click"); // Notification sound
         }
-    }, [broadcastMessage, lastMessage, playSound]);
-
-    // Handle Global Sounds
-    useEffect(() => {
-        if (globalSound && globalSound !== lastSound) {
-            // Map lifeline codes to sounds
-            // 801: Siren, 802: Laugh, 803: Scary, 804: Airhorn
-            if (globalSound === 801) playSound("siren");
-            if (globalSound === 802) playSound("laugh");
-            if (globalSound === 803) playSound("scary");
-            if (globalSound === 804) playSound("airhorn");
-            if (globalSound === 805) playSound("win");
-
-            setLastSound(globalSound);
-        }
-    }, [globalSound, lastSound, playSound]);
-
-    // Render Blackout
-    if (isBlackout) {
-        return (
-            <div className="fixed inset-0 z-50 bg-black flex items-center justify-center cursor-none">
-                {/* Tiny flashlight tracking mouse for effect? Optional, keeping it simple black for now */}
-                <div className="text-zinc-900 text-[10px] select-none">SYSTEM FAILURE</div>
-            </div>
-        );
-    }
+    }, [broadcastMessage, lastMessage]);
 
     if (!isPaused) return null;
 

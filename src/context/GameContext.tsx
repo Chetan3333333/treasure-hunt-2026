@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 
 export type GameState = "login" | "qr-scan" | "round" | "hint" | "winner" | "eliminated";
 
@@ -28,8 +27,6 @@ export interface GameContextType {
   registerParticipant: (name: string) => Promise<void>;
   isPaused: boolean;
   broadcastMessage: string | null;
-  isBlackout: boolean;
-  globalSound: number | null;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
@@ -61,13 +58,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .single();
     if (error) {
       console.error("Error registering participant:", error);
-      toast.error("Login Failed: " + error.message);
       return;
     }
     setParticipantId(data.id);
     setUsername(name);
-    // Explicitly set state to round/qr-scan if not already? 
-    // Usually LoginScreen does this, but let's see.
   }, []);
 
   const addScore = useCallback((points: number) => {
@@ -155,8 +149,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [currentRound, lifelines, score, participantId, updateParticipant]);
 
   const [isPaused, setIsPaused] = useState(false);
-  const [isBlackout, setIsBlackout] = useState(false);
-  const [globalSound, setGlobalSound] = useState<number | null>(null);
   const [broadcastMessage, setBroadcastMessage] = useState<string | null>(null);
 
   // Poll for Admin Commands (Force Unlock, Revive, Bonus) AND Global State
@@ -181,7 +173,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Sync lifelines (Revive)
           if (userData.lifelines > lifelines) {
             setLifelines(userData.lifelines);
-            if (gameState === "eliminated" || gameState === "login") setGameState("round"); // REVIVED!
+            if (gameState === "eliminated") setGameState("round"); // REVIVED!
           }
           // Sync Score (Bonus/Penalty)
           if (userData.score !== score) {
@@ -190,42 +182,24 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // 2. Poll Global Settings (Pause, Broadcast, Blackout, Sound)
+      // 2. Poll Global Settings (Pause, Broadcast)
       // We look for a user with the FIXED ID for settings
-      // 2. Poll Global Settings (Pause, Broadcast, Blackout, Sound)
-      try {
-        const { data: globalData, error: globalErr } = await supabase
-          .from("participants")
-          .select("score, username, lifelines") // Try selecting all, but handle error
-          .eq("id", "00000000-0000-0000-0000-000000000000")
-          .maybeSingle();
+      const { data: globalData } = await supabase
+        .from("participants")
+        .select("score, username")
+        .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
+        .maybeSingle();
 
-        if (globalErr) {
-          console.error("Global Poll Error:", globalErr.message);
-          // Do not throw, just skip this poll
-        } else if (globalData) {
-          // SCORE: 0=Live, 1=Paused, 2=Blackout
-          const paused = globalData.score === 1;
-          const blackout = globalData.score === 2;
-          setIsPaused(paused);
-          setIsBlackout(blackout);
+      if (globalData) {
+        const paused = globalData.score === 1;
+        setIsPaused(paused);
 
-          // SOUND: Lifelines < 900 means a sound trigger
-          if (globalData.lifelines && globalData.lifelines >= 800 && globalData.lifelines < 900) {
-            setGlobalSound(globalData.lifelines);
-          } else {
-            setGlobalSound(null);
-          }
-
-          // If username contains a message format like "📢 Hello World"
-          if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
-            setBroadcastMessage(globalData.username);
-          } else {
-            setBroadcastMessage(null);
-          }
+        // If username contains a message format like "MSG:Hello World"
+        if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
+          setBroadcastMessage(globalData.username);
+        } else {
+          setBroadcastMessage(null); // Clear message if reset
         }
-      } catch (e) {
-        console.error("Critical Poll Error", e);
       }
 
     }, 3000);
@@ -260,8 +234,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         elapsedSeconds, startGlobalTimer, stopGlobalTimer,
         finalScore, finalTime, finishGame,
         participantId, registerParticipant,
-        isPaused, broadcastMessage,
-        isBlackout, globalSound
+        isPaused, broadcastMessage
       }}
     >
       {children}

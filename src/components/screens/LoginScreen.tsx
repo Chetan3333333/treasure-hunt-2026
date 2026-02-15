@@ -20,7 +20,7 @@ const LoginScreen = () => {
     playSound("click");
     setLoading(true);
     await registerParticipant(name.trim());
-    playSound("success");
+    playSound("correct");
     setGameState("qr-scan");
     setLoading(false);
   };
