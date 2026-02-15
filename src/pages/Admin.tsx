@@ -93,17 +93,17 @@ const Admin = () => {
 
     // ============ GAME ACTIONS ============
     const resetGame = async () => {
-        if (!confirm("ARE YOU SURE? This will DELETE all participants/scores.")) return;
+        if (!confirm("ARE YOU SURE? This will RESET all scores to 0.")) return;
 
         const { error } = await supabase
             .from("participants")
-            .delete()
+            .update({ score: 0, completed: false, completion_time: null })
             .neq("id", GLOBAL_ID);
 
         if (error) {
-            toast.error("Reset failed");
+            toast.error("Reset failed: " + error.message);
         } else {
-            toast.success("Game Reset for Everyone");
+            toast.success("Game Reset for Everyone ✅");
             fetchParticipants();
         }
     };
