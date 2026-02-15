@@ -117,23 +117,12 @@ const Admin = () => {
 
     const togglePause = async () => {
         const newStatus = !isPaused;
-        // Use upsert to ensure row exists
-        const { error } = await supabase
+        await supabase
             .from("participants")
-            .upsert({
-                id: "00000000-0000-0000-0000-000000000000",
-                score: newStatus ? 1 : 0,
-                username: "GLOBAL_SETTINGS", // Reset name just in case
-                lifelines: 999,
-                current_round: 999
-            });
-
-        if (error) {
-            toast.error("Action failed: " + error.message);
-        } else {
-            setIsPaused(newStatus);
-            toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
-        }
+            .update({ score: newStatus ? 1 : 0 })
+            .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
+        setIsPaused(newStatus);
+        toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
     };
 
     const sendBroadcast = async () => {
@@ -202,20 +191,6 @@ const Admin = () => {
                             variant={isPaused ? "secondary" : "destructive"}
                         >
                             {isPaused ? "RESUME GAME ▶️" : "PAUSE GAME ⏸️"}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                                const { error } = await supabase.from("participants").upsert({
-                                    id: "00000000-0000-0000-0000-000000000000",
-                                    username: "GLOBAL_SETTINGS"
-                                });
-                                if (error) alert("GOD MODE ERROR: " + error.message);
-                                else alert("GOD MODE CONNECTED! ✅");
-                            }}
-                        >
-                            Test 🛠️
                         </Button>
                     </div>
                 </div>
