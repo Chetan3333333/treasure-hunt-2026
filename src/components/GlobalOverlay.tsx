@@ -8,10 +8,14 @@ const GlobalOverlay = () => {
     // Local state to prevent duplicate toasts for same message
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
+    // Debug log every render
+    console.log("[GlobalOverlay] isPaused:", isPaused, "broadcastMessage:", broadcastMessage);
+
     useEffect(() => {
+        console.log("[GlobalOverlay] useEffect fired. broadcastMessage:", broadcastMessage, "lastMessage:", lastMessage);
         if (broadcastMessage && broadcastMessage !== lastMessage) {
-            // Message format: "📢 Actual Text"
             const content = broadcastMessage.replace("📢 ", "");
+            console.log("[GlobalOverlay] SHOWING TOAST:", content);
             toast(content, {
                 duration: 8000,
                 style: {
@@ -25,24 +29,54 @@ const GlobalOverlay = () => {
             });
             setLastMessage(broadcastMessage);
         }
+        // When message clears, reset lastMessage so same message can show again
+        if (!broadcastMessage && lastMessage) {
+            setLastMessage(null);
+        }
     }, [broadcastMessage, lastMessage]);
 
-    if (!isPaused) return null;
-
+    // Show broadcast as a VISIBLE banner (not just toast) so we can confirm it works
     return (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in">
-            <div className="text-center space-y-4 p-8 border border-red-500/50 bg-red-950/20 rounded-xl neon-border border-red-500 max-w-md mx-4">
-                <h1 className="text-4xl font-display font-bold text-red-500 animate-pulse">
-                    GAME PAUSED
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                    Stand by for instructions from Admin.
-                </p>
-                <div className="h-1 w-full bg-red-900/50 overflow-hidden rounded-full mt-4">
-                    <div className="h-full bg-red-500 animate-[pulse_2s_infinite] w-full origin-left"></div>
+        <>
+            {/* Broadcast Banner — always visible when there's a message */}
+            {broadcastMessage && (
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 9999,
+                    background: "linear-gradient(135deg, #0d0d0d 0%, #001a1a 100%)",
+                    border: "2px solid #00f0ff",
+                    color: "#00f0ff",
+                    padding: "16px",
+                    textAlign: "center",
+                    fontSize: "1.3rem",
+                    fontWeight: "bold",
+                    boxShadow: "0 0 30px #00f0ff",
+                    animation: "pulse 2s infinite",
+                }}>
+                    {broadcastMessage}
                 </div>
-            </div>
-        </div>
+            )}
+
+            {/* Pause Overlay */}
+            {isPaused && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in">
+                    <div className="text-center space-y-4 p-8 border border-red-500/50 bg-red-950/20 rounded-xl neon-border border-red-500 max-w-md mx-4">
+                        <h1 className="text-4xl font-display font-bold text-red-500 animate-pulse">
+                            GAME PAUSED
+                        </h1>
+                        <p className="text-muted-foreground text-lg">
+                            Stand by for instructions from Admin.
+                        </p>
+                        <div className="h-1 w-full bg-red-900/50 overflow-hidden rounded-full mt-4">
+                            <div className="h-full bg-red-500 animate-[pulse_2s_infinite] w-full origin-left"></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 
