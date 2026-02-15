@@ -196,7 +196,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // If username contains a message format like "MSG:Hello World"
         if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
-          console.log("📢 Received Broadcast via Polling:", globalData.username);
           setBroadcastMessage(globalData.username);
         } else {
           setBroadcastMessage(null); // Clear message if reset

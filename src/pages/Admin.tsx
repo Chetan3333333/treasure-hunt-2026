@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import GameHeader from "@/components/GameHeader";
+import { locationHints } from "@/data/questions";
+
+const GLOBAL_ID = "00000000-0000-0000-0000-000000000000";
 
 interface Participant {
     id: string;
@@ -16,13 +18,19 @@ interface Participant {
     completion_time: number;
 }
 
+const getLocationHint = (round: number) => {
+    if (round > 4) return "Finish Line";
+    return locationHints[round - 1] || "Unknown";
+};
+
 const Admin = () => {
     const [password, setPassword] = useState("");
     const [authenticated, setAuthenticated] = useState(false);
     const [participants, setParticipants] = useState<Participant[]>([]);
     const [loading, setLoading] = useState(false);
+    const [broadcastMsg, setBroadcastMsg] = useState("");
+    const [isPaused, setIsPaused] = useState(false);
 
-    // In a real app, verify on server. Here just simple client-side check.
     const checkAuth = () => {
         if (password === "admin123") {
             setAuthenticated(true);
@@ -48,13 +56,61 @@ const Admin = () => {
         setLoading(false);
     };
 
+    // ============ GLOBAL SETTINGS ROW ============
+    // Ensure the GLOBAL_SETTINGS row exists with the fixed ID
+    useEffect(() => {
+        if (authenticated) {
+            ensureGlobalSettings();
+        }
+    }, [authenticated]);
+
+    const ensureGlobalSettings = async () => {
+        // First, try to read the row by ID
+        const { data, error: readError } = await supabase
+            .from("participants")
+            .select("*")
+            .eq("id", GLOBAL_ID)
+            .maybeSingle();
+
+        if (readError) {
+            console.error("Error reading global settings:", readError);
+            toast.error("Failed to read global settings");
+            return;
+        }
+
+        if (!data) {
+            // Row doesn't exist — try to create it with fixed ID
+            const { error: insertError } = await supabase
+                .from("participants")
+                .insert({
+                    id: GLOBAL_ID,
+                    username: "GLOBAL_SETTINGS",
+                    score: 0,
+                    lifelines: 999,
+                    current_round: 999,
+                    completed: false,
+                });
+
+            if (insertError) {
+                console.error("Error creating global settings row:", insertError);
+                toast.error("Failed to create global settings row. Check console.");
+            } else {
+                toast.success("Global settings row created ✅");
+            }
+        } else {
+            setIsPaused(data.score === 1);
+            toast.success("Global settings loaded ✅");
+        }
+    };
+
+    // ============ GAME ACTIONS ============
     const resetGame = async () => {
         if (!confirm("ARE YOU SURE? This will DELETE all participants/scores.")) return;
 
         const { error } = await supabase
             .from("participants")
             .delete()
-            .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all
+            .neq("id", GLOBAL_ID);
 
         if (error) {
             toast.error("Reset failed");
@@ -74,79 +130,77 @@ const Admin = () => {
     };
 
     const revivePlayer = async (id: string) => {
-        const { error } = await supabase.from("participants").update({ lifelines: 4, completed: false }).eq("id", id);
-        if (error) toast.error("Revive failed"); else { toast.success("Player Revived! ❤️"); fetchParticipants(); }
+        const { error } = await supabase
+            .from("participants")
+            .update({ lifelines: 4, completed: false })
+            .eq("id", id);
+        if (error) toast.error("Revive failed");
+        else { toast.success("Player Revived! ❤️"); fetchParticipants(); }
     };
 
     const adjustScore = async (id: string, currentScore: number, amount: number) => {
-        const { error } = await supabase.from("participants").update({ score: currentScore + amount }).eq("id", id);
-        if (error) toast.error("Score update failed"); else { toast.success(`Score ${amount > 0 ? '+' : ''}${amount}`); fetchParticipants(); }
-    };
-
-    const [broadcastMsg, setBroadcastMsg] = useState("");
-    const [isPaused, setIsPaused] = useState(false);
-
-    // Initialize Global Settings Row
-    useEffect(() => {
-        if (authenticated) {
-            checkGlobalSettings();
-        }
-    }, [authenticated]);
-
-    const checkGlobalSettings = async () => {
-        // Use ID to find the row, even if username (broadcast msg) changes
-        const { data } = await supabase
+        const { error } = await supabase
             .from("participants")
-            .select("*")
-            .eq("id", "00000000-0000-0000-0000-000000000000") // Fixed ID
-            .maybeSingle();
-
-        if (!data) {
-            // Create if missing with FIXED ID
-            await supabase.from("participants").insert({
-                id: "00000000-0000-0000-0000-000000000000",
-                username: "GLOBAL_SETTINGS",
-                score: 0,
-                lifelines: 999,
-                current_round: 999
-            });
-        } else {
-            setIsPaused(data.score === 1);
-        }
+            .update({ score: currentScore + amount })
+            .eq("id", id);
+        if (error) toast.error("Score update failed");
+        else { toast.success(`Score ${amount > 0 ? '+' : ''}${amount}`); fetchParticipants(); }
     };
 
+    // ============ GOD MODE: PAUSE / BROADCAST ============
     const togglePause = async () => {
         const newStatus = !isPaused;
-        await supabase
+        const { error } = await supabase
             .from("participants")
             .update({ score: newStatus ? 1 : 0 })
-            .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
-        setIsPaused(newStatus);
-        toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
+            .eq("id", GLOBAL_ID);
+
+        if (error) {
+            console.error("Pause toggle error:", error);
+            toast.error("Pause toggle failed! Check console.");
+        } else {
+            setIsPaused(newStatus);
+            toast.info(newStatus ? "GAME PAUSED ⏸️" : "GAME RESUMED ▶️");
+        }
     };
 
     const sendBroadcast = async () => {
-        if (!broadcastMsg) return;
+        if (!broadcastMsg.trim()) {
+            toast.error("Please type a message first");
+            return;
+        }
 
-        // 1. Send Message by changing username
-        await supabase
+        const message = `📢 ${broadcastMsg.trim()}`;
+
+        // Step 1: Write the broadcast message to GLOBAL_SETTINGS username
+        const { error } = await supabase
             .from("participants")
-            .update({ username: `📢 ${broadcastMsg}` })
-            .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
+            .update({ username: message })
+            .eq("id", GLOBAL_ID);
 
-        toast.success("Broadcast Sent!");
+        if (error) {
+            console.error("Broadcast send error:", error);
+            toast.error("Broadcast failed! Check console.");
+            return;
+        }
 
-        // 2. Clear after 8s
+        toast.success("📢 Broadcast Sent!");
+        setBroadcastMsg("");
+
+        // Step 2: Reset username back to GLOBAL_SETTINGS after 10s
         setTimeout(async () => {
-            await supabase
+            const { error: resetError } = await supabase
                 .from("participants")
                 .update({ username: "GLOBAL_SETTINGS" })
-                .eq("id", "00000000-0000-0000-0000-000000000000"); // Use ID
-        }, 8000);
+                .eq("id", GLOBAL_ID);
 
-        setBroadcastMsg("");
+            if (resetError) {
+                console.error("Broadcast reset error:", resetError);
+            }
+        }, 10000);
     };
 
+    // ============ UI ============
     if (!authenticated) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen gap-4">
@@ -157,16 +211,20 @@ const Admin = () => {
                     onChange={e => setPassword(e.target.value)}
                     placeholder="Enter Passkey"
                     className="max-w-xs"
+                    onKeyDown={e => e.key === "Enter" && checkAuth()}
                 />
                 <Button onClick={checkAuth}>Login</Button>
             </div>
         );
     }
 
+    // Filter out the GLOBAL_SETTINGS row by ID (not by username!)
+    const realParticipants = participants.filter(p => p.id !== GLOBAL_ID);
+
     return (
-        <div className="p-8 min-h-screen bg-background pb-20">
+        <div className="p-4 md:p-8 min-h-screen bg-background pb-20">
             <div className="flex flex-col gap-6 mb-8">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center flex-wrap gap-2">
                     <h1 className="text-2xl font-bold neon-text">Game Control Center</h1>
                     <div className="flex gap-2">
                         <Button onClick={fetchParticipants} variant="outline">Refresh</Button>
@@ -181,6 +239,7 @@ const Admin = () => {
                             value={broadcastMsg}
                             onChange={(e) => setBroadcastMsg(e.target.value)}
                             placeholder="📢 Broadcast Message to All..."
+                            onKeyDown={e => e.key === "Enter" && sendBroadcast()}
                         />
                         <Button onClick={sendBroadcast} variant="default">SEND</Button>
                     </div>
@@ -210,7 +269,7 @@ const Admin = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {participants.filter(p => p.username !== "GLOBAL_SETTINGS").map((p) => (
+                        {realParticipants.map((p) => (
                             <TableRow key={p.id}>
                                 <TableCell className="font-medium">{p.username}</TableCell>
                                 <TableCell className="text-xs max-w-[150px] truncate" title={getLocationHint(p.current_round)}>
@@ -247,13 +306,6 @@ const Admin = () => {
             )}
         </div>
     );
-};
-
-// Helper for location
-import { locationHints } from "@/data/questions";
-const getLocationHint = (round: number) => {
-    if (round > 4) return "Finish Line";
-    return locationHints[round - 1] || "Unknown";
 };
 
 export default Admin;

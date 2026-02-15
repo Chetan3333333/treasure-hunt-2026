@@ -9,14 +9,7 @@ const GlobalOverlay = () => {
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
     useEffect(() => {
-        // Reset local tracker if the broadcast is cleared server-side
-        if (!broadcastMessage) {
-            setLastMessage(null);
-            return;
-        }
-
-        if (broadcastMessage !== lastMessage) {
-            console.log("📢 Triggering Broadcast Toast:", broadcastMessage);
+        if (broadcastMessage && broadcastMessage !== lastMessage) {
             // Message format: "📢 Actual Text"
             const content = broadcastMessage.replace("📢 ", "");
             toast(content, {
