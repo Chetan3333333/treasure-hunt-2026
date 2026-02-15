@@ -56,7 +56,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Only use columns that EXIST in the DB: id, username, score, completion_time, completed
     const { data, error } = await supabase
       .from("participants")
-      .insert({ username: name, score: 0, completion_time: null, completed: false, lifelines: 4 })
+      .insert({ username: name, score: 0, completion_time: null, completed: false })
       .select("id")
       .single();
     if (error) {
@@ -145,27 +145,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) console.error("Error updating score:", error);
   }, [participantId]);
 
-  // Sync lifelines to DB when they change
-  const updateParticipantLifelines = useCallback(async (newLifelines: number) => {
-    if (!participantId) return;
-    const { error } = await supabase
-      .from("participants")
-      .update({ lifelines: newLifelines })
-      .eq("id", participantId);
-    if (error) console.error("Error updating lifelines:", error);
-  }, [participantId]);
-
   React.useEffect(() => {
     if (participantId && score > 0) {
       updateParticipantScore(score);
     }
   }, [score, participantId, updateParticipantScore]);
-
-  React.useEffect(() => {
-    if (participantId) {
-      updateParticipantLifelines(lifelines);
-    }
-  }, [lifelines, participantId, updateParticipantLifelines]);
 
   const [isPaused, setIsPaused] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState<string | null>(null);
@@ -197,26 +181,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
       }
-
-      // Poll for admin-changed lifelines
-      if (participantId) {
-        const { data: myData } = await supabase
-          .from("participants")
-          .select("lifelines")
-          .eq("id", participantId)
-          .maybeSingle();
-        if (myData && myData.lifelines !== null && myData.lifelines !== lifelines) {
-          setLifelines(myData.lifelines);
-          if (myData.lifelines <= 0) {
-            stopGlobalTimer();
-            setGameState("eliminated");
-          }
-        }
-      }
     }, 3000);
 
     return () => clearInterval(pollInterval);
-  }, [participantId, lifelines, stopGlobalTimer]);
+  }, []);
 
   const resetGame = useCallback(() => {
     stopGlobalTimer();
