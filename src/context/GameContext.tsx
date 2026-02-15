@@ -156,7 +156,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Poll for Global State (Pause, Broadcast) — uses ONLY score + username columns
   React.useEffect(() => {
-    console.log("[GameContext] Starting global settings poll...");
     const pollInterval = setInterval(async () => {
       // Poll Global Settings (Pause, Broadcast)
       const { data: globalData, error } = await supabase
@@ -165,7 +164,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq("id", GLOBAL_ID)
         .maybeSingle();
 
-      console.log("[GameContext Poll]", { globalData, error: error?.message });
 
       if (error) {
         return;
@@ -176,13 +174,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsPaused(paused);
 
         if (globalData.username !== "GLOBAL_SETTINGS" && globalData.username.startsWith("📢")) {
-          console.log("[GameContext] BROADCAST DETECTED:", globalData.username);
+
           setBroadcastMessage(globalData.username);
         } else {
           setBroadcastMessage(null);
         }
-      } else {
-        console.log("[GameContext] No GLOBAL_SETTINGS row found! Admin needs to login first.");
+
       }
     }, 3000);
 

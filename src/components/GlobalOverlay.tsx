@@ -5,17 +5,11 @@ import { toast } from "sonner";
 const GlobalOverlay = () => {
     const { isPaused, broadcastMessage } = useGame();
 
-    // Local state to prevent duplicate toasts for same message
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
-    // Debug log every render
-    console.log("[GlobalOverlay] isPaused:", isPaused, "broadcastMessage:", broadcastMessage);
-
     useEffect(() => {
-        console.log("[GlobalOverlay] useEffect fired. broadcastMessage:", broadcastMessage, "lastMessage:", lastMessage);
         if (broadcastMessage && broadcastMessage !== lastMessage) {
             const content = broadcastMessage.replace("📢 ", "");
-            console.log("[GlobalOverlay] SHOWING TOAST:", content);
             toast(content, {
                 duration: 8000,
                 style: {
@@ -29,16 +23,14 @@ const GlobalOverlay = () => {
             });
             setLastMessage(broadcastMessage);
         }
-        // When message clears, reset lastMessage so same message can show again
         if (!broadcastMessage && lastMessage) {
             setLastMessage(null);
         }
     }, [broadcastMessage, lastMessage]);
 
-    // Show broadcast as a VISIBLE banner (not just toast) so we can confirm it works
     return (
         <>
-            {/* Broadcast Banner — always visible when there's a message */}
+            {/* Broadcast Banner */}
             {broadcastMessage && (
                 <div style={{
                     position: "fixed",
