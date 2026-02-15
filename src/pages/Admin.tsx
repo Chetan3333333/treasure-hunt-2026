@@ -13,6 +13,7 @@ interface Participant {
     score: number;
     completed: boolean;
     completion_time: number | null;
+    lifelines: number | null;
 }
 
 const Admin = () => {
@@ -34,10 +35,9 @@ const Admin = () => {
 
     const fetchParticipants = async () => {
         setLoading(true);
-        // Only select columns that EXIST in the DB
         const { data, error } = await supabase
             .from("participants")
-            .select("id, username, score, completed, completion_time")
+            .select("id, username, score, completed, completion_time, lifelines")
             .order("score", { ascending: false });
 
         if (error) {
@@ -116,6 +116,16 @@ const Admin = () => {
             .eq("id", id);
         if (error) toast.error("Score update failed");
         else { toast.success(`Score ${amount > 0 ? '+' : ''}${amount}`); fetchParticipants(); }
+    };
+
+    const adjustLifeline = async (id: string, currentLifelines: number, amount: number) => {
+        const newVal = Math.max(0, currentLifelines + amount);
+        const { error } = await supabase
+            .from("participants")
+            .update({ lifelines: newVal })
+            .eq("id", id);
+        if (error) toast.error("Lifeline update failed");
+        else { toast.success(`Lifelines → ${newVal}`); fetchParticipants(); }
     };
 
     // ============ GOD MODE: PAUSE / BROADCAST ============
@@ -227,6 +237,7 @@ const Admin = () => {
                         <TableRow>
                             <TableHead>Username</TableHead>
                             <TableHead>Score</TableHead>
+                            <TableHead>Lifelines</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
@@ -244,11 +255,26 @@ const Admin = () => {
                                         </div>
                                     </div>
                                 </TableCell>
-                                <TableCell>{p.completed ? "🏆 WINNER" : "PLAYING"}</TableCell>
                                 <TableCell>
+                                    <div className="flex items-center gap-1">
+                                        <span>{'❤️'.repeat(Math.max(0, p.lifelines ?? 4))}</span>
+                                        <span className="text-xs text-muted-foreground">({p.lifelines ?? 4})</span>
+                                        <div className="flex flex-col">
+                                            <button onClick={() => adjustLifeline(p.id, p.lifelines ?? 4, 1)} className="text-[10px] bg-green-900 px-1 rounded hover:bg-green-700">+</button>
+                                            <button onClick={() => adjustLifeline(p.id, p.lifelines ?? 4, -1)} className="text-[10px] bg-red-900 px-1 rounded hover:bg-red-700">−</button>
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>{p.completed ? "🏆 WINNER" : (p.lifelines ?? 4) <= 0 ? "💀 ELIMINATED" : "PLAYING"}</TableCell>
+                                <TableCell className="flex gap-1">
                                     <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => adjustScore(p.id, p.score, 10)}>
                                         +10 🪙
                                     </Button>
+                                    {(p.lifelines ?? 4) <= 0 && (
+                                        <Button size="sm" variant="outline" className="h-7 text-xs border-green-500 text-green-500 hover:bg-green-900" onClick={() => adjustLifeline(p.id, 0, 4)}>
+                                            Revive ❤️
+                                        </Button>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}
