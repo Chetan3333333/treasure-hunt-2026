@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Crosshair, Zap, Loader2 } from "lucide-react";
 import MatrixRain from "@/components/MatrixRain";
+import RulesPopup from "@/components/RulesPopup";
 
 const LoginScreen = () => {
   const { registerParticipant, setGameState } = useGame();
   const { playSound } = useSound();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showRules, setShowRules] = useState(false);
 
   const handleStart = async () => {
     if (!name.trim()) {
@@ -21,13 +23,20 @@ const LoginScreen = () => {
     setLoading(true);
     await registerParticipant(name.trim());
     playSound("correct");
-    setGameState("qr-scan");
     setLoading(false);
+    setShowRules(true);
+  };
+
+  const handleRulesComplete = () => {
+    setShowRules(false);
+    setGameState("qr-scan");
   };
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen px-6 gap-8 overflow-hidden">
       <MatrixRain />
+
+      {showRules && <RulesPopup onComplete={handleRulesComplete} />}
 
       <div className="relative z-10 flex flex-col items-center gap-3 animate-pop-in">
         <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center neon-border animate-float backdrop-blur-sm">
@@ -48,11 +57,11 @@ const LoginScreen = () => {
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleStart()}
           className="bg-secondary/80 backdrop-blur-md border-border text-center text-foreground placeholder:text-muted-foreground focus:neon-border h-12"
-          disabled={loading}
+          disabled={loading || showRules}
         />
         <Button
           onClick={handleStart}
-          disabled={!name.trim() || loading}
+          disabled={!name.trim() || loading || showRules}
           className="h-12 font-display tracking-wider gap-2 text-sm z-10"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
