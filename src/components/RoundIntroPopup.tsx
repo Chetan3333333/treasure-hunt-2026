@@ -20,6 +20,7 @@ const roundData = [
         ],
         timeLimit: "2 minutes per question",
         format: "Multiple Choice (4 options)",
+        negativePoints: "-5 pts",
         totalPoints: 30,
         buttonText: "Start Round 1",
     },
@@ -36,6 +37,7 @@ const roundData = [
         ],
         timeLimit: "2–2.5 minutes per question",
         format: "Concept-based MCQs",
+        negativePoints: "-7 pts",
         totalPoints: 45,
         buttonText: "Start Round 2",
     },
@@ -54,6 +56,7 @@ const roundData = [
         ],
         timeLimit: "45 seconds per question",
         format: "No backtracking allowed",
+        negativePoints: "-4 pts",
         totalPoints: 40,
         buttonText: "Start Rapid Fire",
     },
@@ -69,6 +72,7 @@ const roundData = [
         ],
         timeLimit: "3 minutes per question",
         format: "This round determines your final ranking",
+        negativePoints: "-7 to -10 pts",
         totalPoints: 35,
         buttonText: "Start Final Round",
     },
@@ -110,6 +114,7 @@ const RoundIntroPopup = ({ round, lifelines, onStart }: RoundIntroProps) => {
                 <div className="space-y-1.5 mb-3 text-sm text-foreground/80">
                     <p>• ⏱ Time Limit: <span className="text-foreground">{data.timeLimit}</span></p>
                     <p>• 📋 Format: <span className="text-foreground">{data.format}</span></p>
+                    <p>• 🔻 Wrong Answer: <span className="text-red-400 font-bold">{data.negativePoints}</span></p>
                 </div>
 
                 {/* Warning */}
