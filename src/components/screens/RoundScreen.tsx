@@ -9,8 +9,9 @@ import { useSound } from "@/context/SoundContext";
 import { toast } from "sonner";
 import RoundIntroPopup from "@/components/RoundIntroPopup";
 
-const roundTitles = ["VR + Aptitude", "Tech Riddles + Memes", "Rapid Fire", "DSA Final"];
-const roundTimers = [60, 60, 15, 90];
+const roundTitles = ["Logic & Aptitude", "Tech & Creativity", "Rapid Fire", "Final DSA Challenge"];
+const roundTimers = [120, 150, 45, 180];
+const roundPointsPerQ = [10, 15, 8, 0]; // R4 uses per-question points
 
 const getRoundQuestions = (round: number): Question[] => {
   switch (round) {
@@ -78,24 +79,33 @@ const RoundScreen = () => {
     }
   }, [qIndex, questions.length, currentRound, setRoundComplete, finishGame]);
 
+  const getQuestionPoints = useCallback(() => {
+    // R4 has per-question points, others use flat rate
+    if (currentRound === 4 && currentQ?.points) return currentQ.points;
+    return roundPointsPerQ[currentRound - 1];
+  }, [currentRound, currentQ]);
+
   const handleCorrect = useCallback(() => {
-    addScore(10); // +10 for correct answer
+    const pts = currentRound === 4 && currentQ?.points ? currentQ.points : roundPointsPerQ[currentRound - 1];
+    addScore(pts);
     setTimeout(() => advanceQuestion(), 600);
-  }, [advanceQuestion, addScore]);
+  }, [advanceQuestion, addScore, currentRound, currentQ]);
 
   const handleWrong = useCallback(() => {
-    addScore(-5); // -5 for wrong answer
+    const pts = currentRound === 4 && currentQ?.points ? currentQ.points : roundPointsPerQ[currentRound - 1];
+    addScore(-Math.floor(pts / 2)); // lose half points for wrong
     setTimeout(() => {
       const alive = loseLifeline();
       if (alive) advanceQuestion();
     }, 600);
-  }, [loseLifeline, advanceQuestion, addScore]);
+  }, [loseLifeline, advanceQuestion, addScore, currentRound, currentQ]);
 
   const handleTimeout = useCallback(() => {
-    addScore(-5);
+    const pts = currentRound === 4 && currentQ?.points ? currentQ.points : roundPointsPerQ[currentRound - 1];
+    addScore(-Math.floor(pts / 2));
     const alive = loseLifeline();
     if (alive) advanceQuestion();
-  }, [loseLifeline, advanceQuestion, addScore]);
+  }, [loseLifeline, advanceQuestion, addScore, currentRound, currentQ]);
 
   const handleNextRound = useCallback(() => {
     const next = currentRound + 1;

@@ -3,8 +3,10 @@ export interface Question {
   options: string[];
   correctIndex: number;
   image?: string;
+  points?: number; // per-question points (default varies by round)
 }
 
+// ===== ROUND 1: Logic & Aptitude (3 questions, 10pts each) =====
 export const round1Questions: Question[] = [
   {
     question: "You see a room with 3 doors: one red, one blue, one green. A sign reads 'The safe door is not red. The blue door leads to danger.' Which door is safe?",
@@ -21,8 +23,14 @@ export const round1Questions: Question[] = [
     ],
     correctIndex: 0,
   },
+  {
+    question: "A train travels 60 km in 40 minutes. If it continues at the same speed, how far will it travel in 1.5 hours?",
+    options: ["120 km", "135 km", "150 km", "90 km"],
+    correctIndex: 1,
+  },
 ];
 
+// ===== ROUND 2: Tech & Creativity (3 questions, 15pts each) =====
 export const round2Questions: Question[] = [
   {
     question: "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I in tech?",
@@ -40,8 +48,14 @@ export const round2Questions: Question[] = [
     correctIndex: 1,
     image: "https://i.imgflip.com/65efzo.jpg",
   },
+  {
+    question: "What design pattern is commonly described as: 'One class to rule them all — only one instance allowed'?",
+    options: ["Factory Pattern", "Observer Pattern", "Singleton Pattern", "Strategy Pattern"],
+    correctIndex: 2,
+  },
 ];
 
+// ===== ROUND 3: Rapid Fire (5 questions, 8pts each) =====
 export const round3Questions: Question[] = [
   {
     question: "Keyword: The language used to style web pages.",
@@ -51,6 +65,11 @@ export const round3Questions: Question[] = [
   {
     question: "Fill in the blank: _____ is the process of finding and fixing bugs in code.",
     options: ["Compiling", "Debugging", "Deploying", "Refactoring"],
+    correctIndex: 1,
+  },
+  {
+    question: "True or False: Python is a compiled language.",
+    options: ["True", "False", "Depends on implementation", "Only in Python 2"],
     correctIndex: 1,
   },
   {
@@ -70,11 +89,19 @@ export const round3Questions: Question[] = [
   },
 ];
 
+// ===== ROUND 4: Final DSA Challenge (2 questions, 15+20pts) =====
 export const round4Questions: Question[] = [
   {
     question: "You have a sorted array of 1 million elements. Which algorithm gives you O(log n) search time?",
     options: ["Linear Search", "Binary Search", "Bubble Sort", "BFS"],
     correctIndex: 1,
+    points: 15,
+  },
+  {
+    question: "What is the time complexity of inserting an element at the beginning of a linked list?",
+    options: ["O(n)", "O(log n)", "O(1)", "O(n²)"],
+    correctIndex: 2,
+    points: 20,
   },
 ];
 
