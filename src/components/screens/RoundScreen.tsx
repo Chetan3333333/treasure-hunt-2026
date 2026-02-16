@@ -3,20 +3,20 @@ import { useGame } from "@/context/GameContext";
 import GameHeader from "@/components/GameHeader";
 import QuestionCard from "@/components/QuestionCard";
 import Timer from "@/components/Timer";
-import { round1Questions, getRound1Questions, round2Questions, round3Questions, round4Questions, locationHints, Question } from "@/data/questions";
+import { round1Questions, getRound1Questions, getRound2Questions, round2Questions, round3Questions, round4Questions, locationHints, Question } from "@/data/questions";
 import HintScreen from "@/components/HintScreen";
 import { useSound } from "@/context/SoundContext";
 import { toast } from "sonner";
 import RoundIntroPopup from "@/components/RoundIntroPopup";
 
-const roundTitles = ["Logic & Aptitude", "Tech & Creativity", "Rapid Fire", "Final DSA Challenge"];
+const roundTitles = ["Logic & Aptitude", "Tech Riddles", "Rapid Fire", "Final DSA Challenge"];
 const roundTimers = [120, 150, 45, 180];
 const roundPointsPerQ = [10, 15, 8, 0]; // R4 uses per-question points
 
 const getRoundQuestions = (round: number, username: string): Question[] => {
   switch (round) {
     case 1: return getRound1Questions(username);
-    case 2: return round2Questions;
+    case 2: return getRound2Questions(username);
     case 3: return round3Questions;
     case 4: return round4Questions;
     default: return [];

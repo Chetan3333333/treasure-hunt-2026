@@ -150,25 +150,34 @@ export const getRound1Questions = (username: string): Question[] => {
 // Fallback
 export const round1Questions: Question[] = [logicalReasoningPool[0], verbalReasoningPool[0], aptitudePool[0]];
 
-// ===== ROUND 2: Tech & Creativity (3 questions, 15pts each) =====
-export const round2Questions: Question[] = [
-  {
-    question: "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I in tech?",
-    options: ["A microphone", "An echo / Echo service", "A speaker", "Bluetooth"],
-    correctIndex: 1,
-  },
-  {
-    question: "This meme shows a developer saying 'It works on my machine' while the server is on fire. What concept does this represent?",
-    options: ["Version control", "Environment inconsistency", "Memory leak", "Syntax error"],
-    correctIndex: 1,
-    image: "https://i.imgflip.com/65efzo.jpg",
-  },
-  {
-    question: "What design pattern is commonly described as: 'One class to rule them all — only one instance allowed'?",
-    options: ["Factory Pattern", "Observer Pattern", "Singleton Pattern", "Strategy Pattern"],
-    correctIndex: 2,
-  },
+// ===== ROUND 2: Tech Riddles (3 questions from pool, 15pts each) =====
+const techRiddlePool: Question[] = [
+  { question: "I am the brain of the computer.", options: ["RAM", "Hard Disk", "CPU", "Monitor"], correctIndex: 2 },
+  { question: "I store temporary data and forget everything when power is off.", options: ["ROM", "RAM", "SSD", "Hard Disk"], correctIndex: 1 },
+  { question: "I connect your computer to the internet wirelessly.", options: ["CPU", "Router", "Monitor", "Speaker"], correctIndex: 1 },
+  { question: "I fix errors in your program.", options: ["Compiler", "Debugger", "Scanner", "Printer"], correctIndex: 1 },
+  { question: "I am not hardware, I am not software, but I help hardware and software communicate.", options: ["Keyboard", "Operating System", "Mouse", "Monitor"], correctIndex: 1 },
+  { question: "I send data in small packets across the internet to reach websites.", options: ["Browser", "HTTP", "RAM", "USB"], correctIndex: 1 },
+  { question: "I am a tiny storage inside the CPU that stores frequently used data to make things faster.", options: ["Cache Memory", "Hard Disk", "ROM", "Pen Drive"], correctIndex: 0 },
+  { question: "I allow multiple computers to share files and resources in a building.", options: ["LAN", "RAM", "CPU", "SSD"], correctIndex: 0 },
+  { question: "I am used to copy data from one device to another using a small portable device.", options: ["RAM", "USB / Pen Drive", "CPU", "Cache"], correctIndex: 1 },
+  { question: "I am used to organize data in rows and columns in programming.", options: ["Stack", "Array", "Queue", "Tree"], correctIndex: 1 },
+  { question: "I temporarily store frequently used data to make processing faster.", options: ["Hard Disk", "Cache Memory", "Monitor", "Printer"], correctIndex: 1 },
+  { question: "I am a special character that ends most Java statements.", options: [":", ".", ";", ","], correctIndex: 2 },
 ];
+
+// Pick 3 unique tech riddles per user
+export const getRound2Questions = (username: string): Question[] => {
+  const idx1 = getSeededIndex(username, techRiddlePool.length, "tech1");
+  let idx2 = getSeededIndex(username, techRiddlePool.length, "tech2");
+  while (idx2 === idx1) idx2 = (idx2 + 1) % techRiddlePool.length;
+  let idx3 = getSeededIndex(username, techRiddlePool.length, "tech3");
+  while (idx3 === idx1 || idx3 === idx2) idx3 = (idx3 + 1) % techRiddlePool.length;
+  return [techRiddlePool[idx1], techRiddlePool[idx2], techRiddlePool[idx3]];
+};
+
+// Fallback
+export const round2Questions: Question[] = [techRiddlePool[0], techRiddlePool[1], techRiddlePool[2]];
 
 // ===== ROUND 3: Rapid Fire (5 questions, 8pts each) =====
 export const round3Questions: Question[] = [
