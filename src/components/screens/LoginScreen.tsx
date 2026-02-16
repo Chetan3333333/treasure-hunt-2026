@@ -3,7 +3,7 @@ import { useGame } from "@/context/GameContext";
 import { useSound } from "@/context/SoundContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Crosshair, Zap, Loader2 } from "lucide-react";
+import { Crosshair, Zap, Loader2, Lock } from "lucide-react";
 import MatrixRain from "@/components/MatrixRain";
 import RulesPopup from "@/components/RulesPopup";
 
@@ -11,11 +11,16 @@ const LoginScreen = () => {
   const { registerParticipant, setGameState } = useGame();
   const { playSound } = useSound();
   const [name, setName] = useState("");
+  const [gamePass, setGamePass] = useState("");
   const [loading, setLoading] = useState(false);
   const [showRules, setShowRules] = useState(false);
 
   const handleStart = async () => {
-    if (!name.trim()) {
+    if (!name.trim() || !gamePass.trim()) {
+      playSound("wrong");
+      return;
+    }
+    if (gamePass !== "2468") {
       playSound("wrong");
       return;
     }
@@ -55,13 +60,24 @@ const LoginScreen = () => {
           placeholder="Enter your username"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleStart()}
           className="bg-secondary/80 backdrop-blur-md border-border text-center text-foreground placeholder:text-muted-foreground focus:neon-border h-12"
           disabled={loading || showRules}
         />
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="password"
+            placeholder="Enter game password"
+            value={gamePass}
+            onChange={(e) => setGamePass(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleStart()}
+            className="bg-secondary/80 backdrop-blur-md border-border text-center text-foreground placeholder:text-muted-foreground focus:neon-border h-12 pl-10"
+            disabled={loading || showRules}
+          />
+        </div>
         <Button
           onClick={handleStart}
-          disabled={!name.trim() || loading || showRules}
+          disabled={!name.trim() || !gamePass.trim() || loading || showRules}
           className="h-12 font-display tracking-wider gap-2 text-sm z-10"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
