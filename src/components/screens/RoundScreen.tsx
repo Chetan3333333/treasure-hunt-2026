@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useGame } from "@/context/GameContext";
 import GameHeader from "@/components/GameHeader";
 import QuestionCard from "@/components/QuestionCard";
 import Timer from "@/components/Timer";
-import { round1Questions, round2Questions, round3Questions, round4Questions, locationHints, Question } from "@/data/questions";
+import { round1Questions, getRound1Questions, round2Questions, round3Questions, round4Questions, locationHints, Question } from "@/data/questions";
 import HintScreen from "@/components/HintScreen";
 import { useSound } from "@/context/SoundContext";
 import { toast } from "sonner";
@@ -13,9 +13,9 @@ const roundTitles = ["Logic & Aptitude", "Tech & Creativity", "Rapid Fire", "Fin
 const roundTimers = [120, 150, 45, 180];
 const roundPointsPerQ = [10, 15, 8, 0]; // R4 uses per-question points
 
-const getRoundQuestions = (round: number): Question[] => {
+const getRoundQuestions = (round: number, username: string): Question[] => {
   switch (round) {
-    case 1: return round1Questions;
+    case 1: return getRound1Questions(username);
     case 2: return round2Questions;
     case 3: return round3Questions;
     case 4: return round4Questions;
@@ -24,7 +24,7 @@ const getRoundQuestions = (round: number): Question[] => {
 };
 
 const RoundScreen = () => {
-  const { currentRound, setCurrentRound, loseLifeline, setGameState, setRoundComplete, gameState, addScore, startGlobalTimer, finishGame, lifelines } = useGame();
+  const { currentRound, setCurrentRound, loseLifeline, setGameState, setRoundComplete, gameState, addScore, startGlobalTimer, finishGame, lifelines, username } = useGame();
   const { playSound } = useSound();
   const [qIndex, setQIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
@@ -61,7 +61,8 @@ const RoundScreen = () => {
     }
   }, [currentRound, timerStarted, startGlobalTimer]);
 
-  const questions = getRoundQuestions(currentRound);
+  // Memoize questions to prevent shuffling on re-renders
+  const questions = React.useMemo(() => getRoundQuestions(currentRound, username), [currentRound, username]);
   const currentQ = questions[qIndex];
 
   const advanceQuestion = useCallback(() => {

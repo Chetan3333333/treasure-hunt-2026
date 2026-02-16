@@ -6,28 +6,120 @@ export interface Question {
   points?: number; // per-question points (default varies by round)
 }
 
-// ===== ROUND 1: Logic & Aptitude (3 questions, 10pts each) =====
-export const round1Questions: Question[] = [
+// Helper to get a deterministic random index based on string seed
+const getSeededIndex = (seed: string, poolSize: number, salt: string) => {
+  let hash = 0;
+  const str = seed + salt;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash) % poolSize;
+};
+
+// ===== ROUND 1 POOLS =====
+
+// 1. Logical Reasoning Pool (9 questions)
+const logicalReasoningPool: Question[] = [
   {
-    question: "You see a room with 3 doors: one red, one blue, one green. A sign reads 'The safe door is not red. The blue door leads to danger.' Which door is safe?",
-    options: ["Red door", "Blue door", "Green door", "None of them"],
-    correctIndex: 2,
+    question: "Number Series: 3, 7, 15, 31, 63, ___",
+    options: ["95", "127", "124", "111"],
+    correctIndex: 1, // 127
+  },
+  {
+    question: "Number Series: 1, 4, 10, 22, 46, ___",
+    options: ["92", "88", "94", "90"],
+    correctIndex: 2, // 94
+  },
+  {
+    question: "Alphabet Pattern: B, E, I, N, T, ___",
+    options: ["X", "Y", "A", "Z"],
+    correctIndex: 2, // A
+  },
+  {
+    question: "Coding-Decoding: If ROAD = URDG, then BOOK = ?",
+    options: ["CQQM", "ERRN", "DRRN", "EQQN"],
+    correctIndex: 1, // ERRN
+  },
+  {
+    question: "Direction Sense: A person walks 15m North, then 10m East, then 15m South. Where is he from the starting point?",
+    options: ["15m East", "10m East", "10m West", "15m North"],
+    correctIndex: 1, // 10m East
+  },
+  {
+    question: "Blood Relation: Pointing to a woman, Ramesh said, 'She is the daughter of my grandfather’s only son.' How is the woman related to Ramesh?",
+    options: ["Cousin", "Aunt", "Sister", "Mother"],
+    correctIndex: 2, // Sister
+  },
+  {
+    question: "Statement & Conclusion: All engineers are graduates. Some graduates are unemployed. Conclusion: Some engineers are unemployed.",
+    options: ["Definitely true", "Definitely false", "Cannot be determined", "None"],
+    correctIndex: 2, // Cannot be determined
+  },
+  {
+    question: "Logical Puzzle: If All A are B and All B are C, which is true?",
+    options: ["All C are A", "All A are C", "Some C are A", "None"],
+    correctIndex: 1, // All A are C
+  },
+  {
+    question: "Missing Term: 2, 6, 7, 21, 22, 66, ___",
+    options: ["198", "68", "67", "132"],
+    correctIndex: 2, // 67
+  },
+];
+
+// 2. Verbal Reasoning Pool (Odd One Out + others)
+const verbalReasoningPool: Question[] = [
+  {
+    question: "Odd One Out: Pen, Pencil, Eraser, Notebook",
+    options: ["Pen", "Pencil", "Eraser", "Notebook"],
+    correctIndex: 2, // Eraser
+  },
+  {
+    question: "Odd One Out: January, March, May, July, September",
+    options: ["January", "May", "July", "September"],
+    correctIndex: 3, // September
   },
   {
     question: "If all Bloops are Razzles and all Razzles are Lazzles, then which of the following is true?",
-    options: [
-      "All Bloops are Lazzles",
-      "All Lazzles are Bloops",
-      "Some Razzles are not Bloops",
-      "No Lazzles are Razzles",
-    ],
+    options: ["All Bloops are Lazzles", "All Lazzles are Bloops", "Some Razzles are not Bloops", "No Lazzles are Razzles"],
     correctIndex: 0,
   },
+];
+
+// 3. Aptitude Pool (Simple Math)
+const aptitudePool: Question[] = [
   {
     question: "A train travels 60 km in 40 minutes. If it continues at the same speed, how far will it travel in 1.5 hours?",
     options: ["120 km", "135 km", "150 km", "90 km"],
-    correctIndex: 1,
+    correctIndex: 1, // 135 km
   },
+  {
+    question: "If a shirt costs $20 after a 20% discount, what was the original price?",
+    options: ["$25", "$24", "$22", "$30"],
+    correctIndex: 0, // $25
+  },
+  {
+    question: "What is the next prime number after 31?",
+    options: ["33", "35", "37", "39"],
+    correctIndex: 2, // 37
+  },
+];
+
+// Function to get randomized questions for Round 1 based on username
+export const getRound1Questions = (username: string): Question[] => {
+  const q1 = logicalReasoningPool[getSeededIndex(username, logicalReasoningPool.length, "logical")];
+  const q2 = verbalReasoningPool[getSeededIndex(username, verbalReasoningPool.length, "verbal")];
+  const q3 = aptitudePool[getSeededIndex(username, aptitudePool.length, "aptitude")];
+  return [q1, q2, q3];
+};
+
+// Initial placeholder (used if username not available, though mostly replaced by dynamic call)
+export const round1Questions: Question[] = [
+  logicalReasoningPool[0],
+  verbalReasoningPool[0],
+  aptitudePool[0],
 ];
 
 // ===== ROUND 2: Tech & Creativity (3 questions, 15pts each) =====
