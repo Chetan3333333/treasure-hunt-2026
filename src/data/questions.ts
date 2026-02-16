@@ -179,14 +179,91 @@ export const getRound2Questions = (username: string): Question[] => {
 // Fallback
 export const round2Questions: Question[] = [techRiddlePool[0], techRiddlePool[1], techRiddlePool[2]];
 
-// ===== ROUND 3: Rapid Fire (5 questions, 8pts each) =====
-export const round3Questions: Question[] = [
-  { question: "Keyword: The language used to style web pages.", options: ["HTML", "CSS", "JavaScript", "Python"], correctIndex: 1 },
-  { question: "Fill in the blank: _____ is the process of finding and fixing bugs in code.", options: ["Compiling", "Debugging", "Deploying", "Refactoring"], correctIndex: 1 },
-  { question: "True or False: Python is a compiled language.", options: ["True", "False", "Depends on implementation", "Only in Python 2"], correctIndex: 1 },
-  { question: "Match: 'git push' is related to ___.", options: ["Downloading code", "Uploading code to remote", "Deleting branches", "Creating files"], correctIndex: 1 },
-  { question: "What does API stand for?", options: ["Applied Programming Interface", "Application Programming Interface", "Application Process Integration", "Automated Programming Interface"], correctIndex: 1 },
+// ===== ROUND 3: Rapid Fire — 5 categories, 10 questions each, 1 per player =====
+
+// Category 1: Fill in the Blanks (10)
+const fillBlanksPool: Question[] = [
+  { question: "CPU stands for:", options: ["Central Program Unit", "Central Processing Unit", "Control Processing Unit", "Computer Processing Unit"], correctIndex: 1 },
+  { question: "The extension of a Java file is:", options: [".py", ".java", ".class", ".js"], correctIndex: 1 },
+  { question: "In a stack, deletion operation is called:", options: ["Push", "Enqueue", "Pop", "Remove"], correctIndex: 2 },
+  { question: "Which symbol is used for single-line comment in Java?", options: ["#", "//", "/*", "--"], correctIndex: 1 },
+  { question: "SQL is mainly used to:", options: ["Design websites", "Style pages", "Manage databases", "Compile code"], correctIndex: 2 },
+  { question: "Which data structure uses FIFO?", options: ["Stack", "Queue", "Tree", "Graph"], correctIndex: 1 },
+  { question: "Which memory is fastest?", options: ["Hard Disk", "RAM", "Cache", "ROM"], correctIndex: 2 },
+  { question: "HTML is used to create:", options: ["Styling", "Structure", "Logic", "Database"], correctIndex: 1 },
+  { question: "Binary search time complexity:", options: ["O(n)", "O(log n)", "O(n²)", "O(1)"], correctIndex: 1 },
+  { question: "A function calling itself is:", options: ["Loop", "Recursion", "Iteration", "Compilation"], correctIndex: 1 },
 ];
+
+// Category 2: Match the Following (10)
+const matchPool: Question[] = [
+  { question: "Stack → ?", options: ["FIFO", "LIFO", "Random", "Sorted"], correctIndex: 1 },
+  { question: "Queue → ?", options: ["LIFO", "Priority", "FIFO", "Stack"], correctIndex: 2 },
+  { question: "CSS → ?", options: ["Programming", "Styling", "Database", "Compiler"], correctIndex: 1 },
+  { question: "DNS → ?", options: ["Storage", "Domain to IP conversion", "Virus scan", "Sorting"], correctIndex: 1 },
+  { question: "RAM → ?", options: ["Permanent memory", "Temporary memory", "Processor", "Compiler"], correctIndex: 1 },
+  { question: "HTTP → ?", options: ["Web protocol", "Memory type", "Algorithm", "Sorting method"], correctIndex: 0 },
+  { question: "Java → ?", options: ["Database", "Markup Language", "Programming Language", "Styling Tool"], correctIndex: 2 },
+  { question: "ROM → ?", options: ["Temporary memory", "Permanent memory", "Cache", "Input device"], correctIndex: 1 },
+  { question: "OS → ?", options: ["Manages hardware", "Designs websites", "Prints files", "Stores passwords"], correctIndex: 0 },
+  { question: "Array → ?", options: ["Dynamic pointer structure", "Fixed-size collection", "Sorting method", "Loop"], correctIndex: 1 },
+];
+
+// Category 3: Programming Keyword Identification (10)
+const keywordPool: Question[] = [
+  { question: "`def` belongs to:", options: ["Java", "Python", "C", "C++"], correctIndex: 1 },
+  { question: "`cout` belongs to:", options: ["Java", "C", "C++", "Python"], correctIndex: 2 },
+  { question: "`System.out.println()` belongs to:", options: ["Python", "C", "Java", "JavaScript"], correctIndex: 2 },
+  { question: "`console.log()` belongs to:", options: ["JavaScript", "Java", "C", "Python"], correctIndex: 0 },
+  { question: "`#include<stdio.h>` belongs to:", options: ["C", "Python", "Java", "SQL"], correctIndex: 0 },
+  { question: "`elif` is used in:", options: ["C", "Java", "Python", "C++"], correctIndex: 2 },
+  { question: "`var` is common in:", options: ["JavaScript", "C", "SQL", "HTML"], correctIndex: 0 },
+  { question: "`public static void main` belongs to:", options: ["C++", "Java", "Python", "JS"], correctIndex: 1 },
+  { question: "`printf()` belongs to:", options: ["Java", "Python", "C", "CSS"], correctIndex: 2 },
+  { question: "`import java.util.*;` belongs to:", options: ["C", "Python", "Java", "SQL"], correctIndex: 2 },
+];
+
+// Category 4: True / False (10)
+const trueFalsePool: Question[] = [
+  { question: "Binary search works on unsorted arrays.", options: ["True", "False"], correctIndex: 1 },
+  { question: "Stack uses only one pointer called 'top'.", options: ["True", "False"], correctIndex: 0 },
+  { question: "Java allows multiple inheritance using classes.", options: ["True", "False"], correctIndex: 1 },
+  { question: "Cache memory is slower than RAM.", options: ["True", "False"], correctIndex: 1 },
+  { question: "An array index in Java starts at 1.", options: ["True", "False"], correctIndex: 1 },
+  { question: "A queue can be implemented using arrays.", options: ["True", "False"], correctIndex: 0 },
+  { question: "HTML can execute logic like loops.", options: ["True", "False"], correctIndex: 1 },
+  { question: "`==` checks value equality in Java.", options: ["True", "False"], correctIndex: 0 },
+  { question: "O(1) means constant time.", options: ["True", "False"], correctIndex: 0 },
+  { question: "Recursion always uses stack memory.", options: ["True", "False"], correctIndex: 0 },
+];
+
+// Category 5: Output Prediction (10)
+const outputPool: Question[] = [
+  { question: "int a=5, b=3; System.out.println(a*b+a);", options: ["20", "15", "18", "25"], correctIndex: 0 },
+  { question: "int x=10; System.out.println(x++ + ++x);", options: ["21", "22", "20", "23"], correctIndex: 1 },
+  { question: "System.out.println(5 > 3 && 2 < 1);", options: ["true", "false", "1", "error"], correctIndex: 1 },
+  { question: "int a=4; System.out.println(a==4 ? 10 : 20);", options: ["4", "10", "20", "error"], correctIndex: 1 },
+  { question: 'System.out.println("Hello" + 5 + 5);', options: ["Hello10", "Hello55", "10Hello", "Error"], correctIndex: 1 },
+  { question: "int a=6; System.out.println(a % 4);", options: ["1", "2", "3", "4"], correctIndex: 1 },
+  { question: "int a=3; a*=2; System.out.println(a);", options: ["3", "5", "6", "9"], correctIndex: 2 },
+  { question: "System.out.println(10 / 4.0);", options: ["2", "2.5", "3", "2.0"], correctIndex: 1 },
+  { question: "boolean x=false; System.out.println(!x);", options: ["true", "false", "error", "0"], correctIndex: 0 },
+  { question: "int a=5; System.out.println(a--);", options: ["4", "5", "6", "error"], correctIndex: 1 },
+];
+
+// Pick 1 from each category per user (5 questions total)
+export const getRound3Questions = (username: string): Question[] => {
+  return [
+    fillBlanksPool[getSeededIndex(username, fillBlanksPool.length, "fill")],
+    matchPool[getSeededIndex(username, matchPool.length, "match")],
+    keywordPool[getSeededIndex(username, keywordPool.length, "keyword")],
+    trueFalsePool[getSeededIndex(username, trueFalsePool.length, "tf")],
+    outputPool[getSeededIndex(username, outputPool.length, "output")],
+  ];
+};
+
+// Fallback
+export const round3Questions: Question[] = [fillBlanksPool[0], matchPool[0], keywordPool[0], trueFalsePool[0], outputPool[0]];
 
 // ===== ROUND 4: Final DSA Challenge (2 questions, 15+20pts) =====
 export const round4Questions: Question[] = [
