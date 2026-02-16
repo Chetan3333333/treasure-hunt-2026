@@ -123,22 +123,32 @@ const verbalReasoningPool: Question[] = [
   },
 ];
 
-// Q3: Aptitude (fixed — will add pool later)
-const aptitudeQ: Question = {
-  question: "A train travels 60 km in 40 minutes. If it continues at the same speed, how far will it travel in 1.5 hours?",
-  options: ["120 km", "135 km", "150 km", "90 km"],
-  correctIndex: 1,
-};
+// Q3 pool: Aptitude (12 questions — each player gets 1)
+const aptitudePool: Question[] = [
+  { question: "25% of 200 = ?", options: ["25", "40", "50", "75"], correctIndex: 2 },
+  { question: "15 + 5 × 2 = ?", options: ["40", "25", "30", "20"], correctIndex: 1 },
+  { question: "A train runs at 50 km/hr. Distance covered in 2 hours?", options: ["100 km", "120 km", "80 km", "150 km"], correctIndex: 0 },
+  { question: "0.5 × 80 = ?", options: ["20", "30", "40", "50"], correctIndex: 2 },
+  { question: "If today is Thursday, what day after 30 days?", options: ["Sunday", "Tuesday", "Monday", "Saturday"], correctIndex: 3 },
+  { question: "What is 45 ÷ 5 × 2?", options: ["9", "15", "18", "20"], correctIndex: 2 },
+  { question: "Square of 15 = ?", options: ["225", "215", "205", "235"], correctIndex: 0 },
+  { question: "Find the HCF of 36 and 48.", options: ["6", "12", "18", "24"], correctIndex: 1 },
+  { question: "A car travels 60 km in 2 hours. What is its speed?", options: ["30 km/hr", "40 km/hr", "45 km/hr", "50 km/hr"], correctIndex: 0 },
+  { question: "What is the square of 18?", options: ["324", "328", "320", "340"], correctIndex: 0 },
+  { question: "If 5 workers complete a work in 10 days, how many days will 10 workers take?", options: ["2", "4", "5", "8"], correctIndex: 2 },
+  { question: "A train travels 60 km in 40 minutes. How far will it travel in 1.5 hours?", options: ["120 km", "135 km", "150 km", "90 km"], correctIndex: 1 },
+];
 
-// Get Round 1 questions: Q1 & Q2 randomized from pools, Q3 fixed
+// Get Round 1 questions: all 3 randomized from pools
 export const getRound1Questions = (username: string): Question[] => {
   const q1 = logicalReasoningPool[getSeededIndex(username, logicalReasoningPool.length, "logical")];
   const q2 = verbalReasoningPool[getSeededIndex(username, verbalReasoningPool.length, "verbal")];
-  return [q1, q2, aptitudeQ];
+  const q3 = aptitudePool[getSeededIndex(username, aptitudePool.length, "aptitude")];
+  return [q1, q2, q3];
 };
 
-// Fallback for imports that don't pass username
-export const round1Questions: Question[] = [logicalReasoningPool[0], verbalReasoningPool[0], aptitudeQ];
+// Fallback
+export const round1Questions: Question[] = [logicalReasoningPool[0], verbalReasoningPool[0], aptitudePool[0]];
 
 // ===== ROUND 2: Tech & Creativity (3 questions, 15pts each) =====
 export const round2Questions: Question[] = [
