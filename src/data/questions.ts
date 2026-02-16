@@ -69,12 +69,59 @@ const logicalReasoningPool: Question[] = [
   },
 ];
 
-// Q2: Verbal Reasoning (fixed — will add pool later)
-const verbalReasoningQ: Question = {
-  question: "Odd One Out: Pen, Pencil, Eraser, Notebook",
-  options: ["Pen", "Pencil", "Eraser", "Notebook"],
-  correctIndex: 2,
-};
+// Q2 pool: Verbal Reasoning (10 questions — each player gets 1)
+const verbalReasoningPool: Question[] = [
+  {
+    question: "Odd One Out: Pen, Pencil, Eraser, Notebook",
+    options: ["Pen", "Pencil", "Eraser", "Notebook"],
+    correctIndex: 2,
+  },
+  {
+    question: "Odd One Out: January, March, May, July, September",
+    options: ["January", "May", "July", "September"],
+    correctIndex: 3,
+  },
+  {
+    question: "\"Once in a blue moon\" means:",
+    options: ["Very often", "Very rarely", "At night", "Twice a month"],
+    correctIndex: 1,
+  },
+  {
+    question: "\"Under the weather\" means:",
+    options: ["Feeling sick", "Standing in rain", "Feeling happy", "Very busy"],
+    correctIndex: 0,
+  },
+  {
+    question: "Antonym of \"Optimistic\":",
+    options: ["Positive", "Cheerful", "Pessimistic", "Hopeful"],
+    correctIndex: 2,
+  },
+  {
+    question: "Antonym of \"Generous\":",
+    options: ["Kind", "Selfish", "Friendly", "Helpful"],
+    correctIndex: 1,
+  },
+  {
+    question: "Synonym of \"Reluctant\":",
+    options: ["Willing", "Angry", "Unwilling", "Confident"],
+    correctIndex: 2,
+  },
+  {
+    question: "Synonym of \"Ancient\":",
+    options: ["Modern", "Old", "Future", "Young"],
+    correctIndex: 1,
+  },
+  {
+    question: "___ Earth revolves around ___ Sun.",
+    options: ["The, the", "A, the", "The, a", "No article, the"],
+    correctIndex: 0,
+  },
+  {
+    question: "He has ___ MBA degree.",
+    options: ["a", "an", "the", "no article"],
+    correctIndex: 1,
+  },
+];
 
 // Q3: Aptitude (fixed — will add pool later)
 const aptitudeQ: Question = {
@@ -83,14 +130,15 @@ const aptitudeQ: Question = {
   correctIndex: 1,
 };
 
-// Get Round 1 questions: Q1 randomized from pool, Q2 & Q3 fixed
+// Get Round 1 questions: Q1 & Q2 randomized from pools, Q3 fixed
 export const getRound1Questions = (username: string): Question[] => {
   const q1 = logicalReasoningPool[getSeededIndex(username, logicalReasoningPool.length, "logical")];
-  return [q1, verbalReasoningQ, aptitudeQ];
+  const q2 = verbalReasoningPool[getSeededIndex(username, verbalReasoningPool.length, "verbal")];
+  return [q1, q2, aptitudeQ];
 };
 
 // Fallback for imports that don't pass username
-export const round1Questions: Question[] = [logicalReasoningPool[0], verbalReasoningQ, aptitudeQ];
+export const round1Questions: Question[] = [logicalReasoningPool[0], verbalReasoningPool[0], aptitudeQ];
 
 // ===== ROUND 2: Tech & Creativity (3 questions, 15pts each) =====
 export const round2Questions: Question[] = [
