@@ -67,8 +67,8 @@ const roundData = [
         icon: "🏆",
         title: "Round 4 – Final DSA Challenge",
         questions: [
-            { label: "DSA (Very Easy)", points: 15 },
-            { label: "DSA (Moderate)", points: 20 },
+            { label: "DSA Concept", points: 15 },
+            { label: "DSA Concept", points: 20 },
         ],
         timeLimit: "3 minutes per question",
         format: "This round determines your final ranking",

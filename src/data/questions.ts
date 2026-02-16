@@ -265,11 +265,30 @@ export const getRound3Questions = (username: string): Question[] => {
 // Fallback
 export const round3Questions: Question[] = [fillBlanksPool[0], matchPool[0], keywordPool[0], trueFalsePool[0], outputPool[0]];
 
-// ===== ROUND 4: Final DSA Challenge (2 questions, 15+20pts) =====
-export const round4Questions: Question[] = [
-  { question: "You have a sorted array of 1 million elements. Which algorithm gives you O(log n) search time?", options: ["Linear Search", "Binary Search", "Bubble Sort", "BFS"], correctIndex: 1, points: 15 },
-  { question: "What is the time complexity of inserting an element at the beginning of a linked list?", options: ["O(n)", "O(log n)", "O(1)", "O(n²)"], correctIndex: 2, points: 20 },
+// ===== ROUND 4: Final DSA Challenge — 10-question pool, 2 per player =====
+const dsaPool: Question[] = [
+  { question: "Which data structure is most suitable for implementing Undo/Redo operations?", options: ["Queue", "Stack", "Linked List", "Tree"], correctIndex: 1, points: 15 },
+  { question: "In a Binary Search Tree (BST), where are smaller values placed?", options: ["Right subtree", "Left subtree", "Randomly", "Anywhere"], correctIndex: 1, points: 15 },
+  { question: "Which traversal visits nodes in the order: Root → Left → Right?", options: ["Inorder", "Postorder", "Preorder", "Level Order"], correctIndex: 2, points: 15 },
+  { question: "In a queue, if the queue is empty and you try to delete, it is called:", options: ["Overflow", "Underflow", "Push", "Collision"], correctIndex: 1, points: 15 },
+  { question: "Which data structure is used to implement recursion internally?", options: ["Queue", "Stack", "Array", "Graph"], correctIndex: 1, points: 20 },
+  { question: "In a circular queue, the condition for full queue is:", options: ["rear == front", "(rear + 1) % size == front", "front == -1", "rear == -1"], correctIndex: 1, points: 20 },
+  { question: "Which data structure is best to represent a hierarchical structure?", options: ["Array", "Stack", "Tree", "Queue"], correctIndex: 2, points: 15 },
+  { question: "A graph with no cycles is called:", options: ["Complete Graph", "Directed Graph", "Tree", "Weighted Graph"], correctIndex: 2, points: 20 },
+  { question: "In a doubly linked list, each node contains:", options: ["Only data", "Data and one pointer", "Data and two pointers", "Two data values"], correctIndex: 2, points: 20 },
+  { question: "Which data structure is best for implementing priority-based processing (like CPU scheduling)?", options: ["Stack", "Queue", "Priority Queue", "Linked List"], correctIndex: 2, points: 20 },
 ];
+
+// Pick 2 unique DSA questions per user
+export const getRound4Questions = (username: string): Question[] => {
+  const idx1 = getSeededIndex(username, dsaPool.length, "dsa1");
+  let idx2 = getSeededIndex(username, dsaPool.length, "dsa2");
+  while (idx2 === idx1) idx2 = (idx2 + 1) % dsaPool.length;
+  return [dsaPool[idx1], dsaPool[idx2]];
+};
+
+// Fallback
+export const round4Questions: Question[] = [dsaPool[0], dsaPool[1]];
 
 export const locationHints = [
   "🏛️ Head to the library entrance — look near the notice board on the left side.",

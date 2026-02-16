@@ -3,7 +3,7 @@ import { useGame } from "@/context/GameContext";
 import GameHeader from "@/components/GameHeader";
 import QuestionCard from "@/components/QuestionCard";
 import Timer from "@/components/Timer";
-import { round1Questions, getRound1Questions, getRound2Questions, getRound3Questions, round2Questions, round3Questions, round4Questions, locationHints, Question } from "@/data/questions";
+import { round1Questions, getRound1Questions, getRound2Questions, getRound3Questions, getRound4Questions, round2Questions, round3Questions, round4Questions, locationHints, Question } from "@/data/questions";
 import HintScreen from "@/components/HintScreen";
 import { useSound } from "@/context/SoundContext";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ const getRoundQuestions = (round: number, username: string): Question[] => {
     case 1: return getRound1Questions(username);
     case 2: return getRound2Questions(username);
     case 3: return getRound3Questions(username);
-    case 4: return round4Questions;
+    case 4: return getRound4Questions(username);
     default: return [];
   }
 };
