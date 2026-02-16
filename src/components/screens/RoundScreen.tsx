@@ -7,6 +7,7 @@ import { round1Questions, round2Questions, round3Questions, round4Questions, loc
 import HintScreen from "@/components/HintScreen";
 import { useSound } from "@/context/SoundContext";
 import { toast } from "sonner";
+import RoundIntroPopup from "@/components/RoundIntroPopup";
 
 const roundTitles = ["VR + Aptitude", "Tech Riddles + Memes", "Rapid Fire", "DSA Final"];
 const roundTimers = [60, 60, 15, 90];
@@ -22,12 +23,13 @@ const getRoundQuestions = (round: number): Question[] => {
 };
 
 const RoundScreen = () => {
-  const { currentRound, setCurrentRound, loseLifeline, setGameState, setRoundComplete, gameState, addScore, startGlobalTimer, finishGame } = useGame();
+  const { currentRound, setCurrentRound, loseLifeline, setGameState, setRoundComplete, gameState, addScore, startGlobalTimer, finishGame, lifelines } = useGame();
   const { playSound } = useSound();
   const [qIndex, setQIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [timerStarted, setTimerStarted] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
 
   // Anti-Cheat: Focus Mode Detection
   useEffect(() => {
@@ -101,10 +103,25 @@ const RoundScreen = () => {
     setQIndex(0);
     setTimerKey(0);
     setShowHint(false);
+    setShowIntro(true);
     setGameState("qr-scan");
   }, [currentRound, setCurrentRound, setGameState]);
 
   if (gameState === "eliminated") return null;
+
+  // Show round intro popup
+  if (showIntro) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <GameHeader />
+        <RoundIntroPopup
+          round={currentRound}
+          lifelines={lifelines}
+          onStart={() => setShowIntro(false)}
+        />
+      </div>
+    );
+  }
 
   if (showHint) {
     return (
