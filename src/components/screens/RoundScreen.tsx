@@ -8,7 +8,6 @@ import HintScreen from "@/components/HintScreen";
 import { useSound } from "@/context/SoundContext";
 import { toast } from "sonner";
 import RoundIntroPopup from "@/components/RoundIntroPopup";
-import RoundTransition from "@/components/RoundTransition";
 
 const roundTitles = ["Logic & Aptitude", "Tech Riddles", "Rapid Fire", "Final DSA Challenge"];
 const roundTimers = [120, 150, 45, 180];
@@ -32,7 +31,6 @@ const RoundScreen = () => {
   const [timerKey, setTimerKey] = useState(0);
   const [timerStarted, setTimerStarted] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  const [showTransition, setShowTransition] = useState(true);
 
   // Anti-Cheat: Focus Mode Detection
   useEffect(() => {
@@ -117,16 +115,10 @@ const RoundScreen = () => {
     setTimerKey(0);
     setShowHint(false);
     setShowIntro(true);
-    setShowTransition(true);
     setGameState("qr-scan");
   }, [currentRound, setCurrentRound, setGameState]);
 
   if (gameState === "eliminated") return null;
-
-  // Show round transition first
-  if (showTransition) {
-    return <RoundTransition round={currentRound} onComplete={() => setShowTransition(false)} />;
-  }
 
   // Show round intro popup
   if (showIntro) {

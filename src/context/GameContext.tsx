@@ -69,8 +69,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addScore = useCallback((points: number) => {
     setScore(prev => prev + points);
-    // Dispatch event for visual effect
-    window.dispatchEvent(new CustomEvent("score-change", { detail: { points } }));
   }, []);
 
   const startGlobalTimer = useCallback(() => {

@@ -20,7 +20,7 @@ const HintScreen = ({ hint, onContinue, roundCompleted }: HintScreenProps) => {
         Great job! Head to the next location:
       </p>
       <div className="glass-card rounded-lg p-5 neon-border max-w-sm w-full text-center">
-        <p className="text-foreground font-medium text-lg leading-relaxed whitespace-pre-wrap">{hint}</p>
+        <p className="text-foreground font-medium text-lg leading-relaxed whitespace-pre-line italic">{hint}</p>
       </div>
       <Button onClick={onContinue} className="gap-2 mt-2">
         Scan Next QR Code <ArrowRight className="w-4 h-4" />

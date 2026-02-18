@@ -15,9 +15,6 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const [showRules, setShowRules] = useState(false);
 
-  const [selectedAvatar, setSelectedAvatar] = useState("👤");
-  const avatars = ["👤", "🦁", "🐯", "🐻", "🦈", "🦅", "🐺", "🐼", "🐲", "🚀", "💀", "🤖", "👽", "👻", "🤡", "💩"];
-
   const handleStart = async () => {
     if (!name.trim() || !gamePass.trim()) {
       playSound("wrong");
@@ -29,8 +26,7 @@ const LoginScreen = () => {
     }
     playSound("click");
     setLoading(true);
-    const fullName = `${selectedAvatar} ${name.trim()}`;
-    await registerParticipant(fullName);
+    await registerParticipant(name.trim());
     playSound("correct");
     setLoading(false);
     setShowRules(true);
@@ -60,23 +56,6 @@ const LoginScreen = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-xs flex flex-col gap-4 animate-pop-in" style={{ animationDelay: "0.15s" }}>
-
-        {/* Avatar Selection */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x max-w-full px-1">
-          {avatars.map(av => (
-            <button
-              key={av}
-              onClick={() => setSelectedAvatar(av)}
-              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl transition-all border-2 ${selectedAvatar === av
-                  ? "bg-primary/20 border-primary scale-110 shadow-[0_0_10px_#00f0ff]"
-                  : "bg-secondary/40 border-transparent hover:bg-secondary/80"
-                }`}
-            >
-              {av}
-            </button>
-          ))}
-        </div>
-
         <Input
           placeholder="Enter your username"
           value={name}

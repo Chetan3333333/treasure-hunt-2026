@@ -291,10 +291,10 @@ export const getRound4Questions = (username: string): Question[] => {
 export const round4Questions: Question[] = [dsaPool[0], dsaPool[1]];
 
 export const locationHints = [
-  "1. I DONT HAVE WIFI, YET I UPDATE DAILY\n2. I SHARE NEWS WITH ONE AND ALL",
-  "I don’t run on electricity,\nYet I keep you running.\nBut essential for survival.",
-  "I am made of wood and never move,\nStand behind me when you need to prove.",
-  "🏆 Final stop: Auditorium main door — your destiny awaits!",
+  "🏛️ Head to the library entrance — look near the notice board on the left side.",
+  "📰 I don't have WiFi, yet I update daily.\nI share news with one and all.",
+  "🚰 I don't run on electricity,\nYet I keep you running.\nBut essential for survival.",
+  "🪵 I am made of wood and never move,\nStand behind me when you need to prove.",
 ];
 
 export const roundPasswords: Record<number, string> = {
