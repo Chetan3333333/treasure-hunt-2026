@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
+import { useSound } from "@/context/SoundContext";
 
 interface TimerProps {
   seconds: number;
@@ -8,6 +9,7 @@ interface TimerProps {
 }
 
 const Timer = ({ seconds, onTimeout, isRunning }: TimerProps) => {
+  const { playSound } = useSound();
   const [timeLeft, setTimeLeft] = useState(seconds);
 
   useEffect(() => {
@@ -18,6 +20,9 @@ const Timer = ({ seconds, onTimeout, isRunning }: TimerProps) => {
     if (!isRunning || timeLeft <= 0) return;
     const interval = setInterval(() => {
       setTimeLeft(prev => {
+        if (prev <= 10 && prev > 0) {
+          playSound("click"); // Reuse click sound as tick (or add specific tick sound if available)
+        }
         if (prev <= 1) {
           onTimeout();
           return 0;
@@ -36,9 +41,8 @@ const Timer = ({ seconds, onTimeout, isRunning }: TimerProps) => {
       <Clock className={`w-4 h-4 ${isLow ? "text-destructive animate-pulse-neon" : "text-primary"}`} />
       <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-1000 ease-linear ${
-            isLow ? "bg-destructive" : "bg-primary"
-          }`}
+          className={`h-full rounded-full transition-all duration-1000 ease-linear ${isLow ? "bg-destructive" : "bg-primary"
+            }`}
           style={{ width: `${pct}%` }}
         />
       </div>

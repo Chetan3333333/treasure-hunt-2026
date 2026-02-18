@@ -1,6 +1,7 @@
 import { useGame } from "@/context/GameContext";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import ScorePopup from "./ScorePopup";
 
 const GlobalOverlay = () => {
     const { isPaused, broadcastMessage } = useGame();
@@ -30,6 +31,7 @@ const GlobalOverlay = () => {
 
     return (
         <>
+            <ScorePopup />
             {/* Broadcast Banner */}
             {broadcastMessage && (
                 <div style={{

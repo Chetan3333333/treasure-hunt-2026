@@ -291,9 +291,9 @@ export const getRound4Questions = (username: string): Question[] => {
 export const round4Questions: Question[] = [dsaPool[0], dsaPool[1]];
 
 export const locationHints = [
-  "🏛️ Head to the library entrance — look near the notice board on the left side.",
-  "🌳 Go to the campus garden — the QR is taped under the third bench.",
-  "💻 Visit the computer lab — check the whiteboard near the projector.",
+  "1. I DONT HAVE WIFI, YET I UPDATE DAILY\n2. I SHARE NEWS WITH ONE AND ALL",
+  "I don’t run on electricity,\nYet I keep you running.\nBut essential for survival.",
+  "I am made of wood and never move,\nStand behind me when you need to prove.",
   "🏆 Final stop: Auditorium main door — your destiny awaits!",
 ];
 
