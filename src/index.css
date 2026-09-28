@@ -1,40 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+.glitched-text {
+  text-shadow: 2px 0 #00ff41, -2px 0 #ff0000;
+}
+
+body {
+  overscroll-behavior-y: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background-color: #050505;
+  overflow-x: hidden;
+}
+
+/* Font import moved to top of file */
+
+/* CRT Overlay */
+body::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 100;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
+/* Scanline Animation */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+body::before {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 100;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+  animation: scanline 10s linear infinite;
+  opacity: 0.1;
+}
+
+/* Typography Overrides */
+h1,
+h2,
+h3,
+h4,
+.font-mono {
+  font-family: 'Orbitron', 'Share Tech Mono', monospace !important;
+}
+
+.font-mono {
+  font-family: 'Share Tech Mono', monospace !important;
+}
+
 
 @layer base {
   :root {
-    --background: 220 20% 7%;
-    --foreground: 160 60% 90%;
+    /* Cyberpunk Theme Overrides */
+    --background: 0 0% 0%;
+    /* Pure Black */
+    --foreground: 160 100% 45%;
+    /* Matrix Green */
 
-    --card: 220 18% 10%;
-    --card-foreground: 160 60% 90%;
+    --card: 0 0% 5%;
+    /* Very dark grey, almost black */
+    --card-foreground: 160 100% 45%;
 
-    --popover: 220 18% 10%;
-    --popover-foreground: 160 60% 90%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 160 100% 45%;
 
     --primary: 160 100% 45%;
-    --primary-foreground: 220 20% 7%;
+    /* Matrix Green #00FF41 */
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 220 15% 16%;
-    --secondary-foreground: 160 60% 90%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 160 100% 45%;
 
-    --muted: 220 15% 14%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 160 100% 30%;
 
     --accent: 45 100% 55%;
-    --accent-foreground: 220 20% 7%;
+    /* Amber */
+    --accent-foreground: 0 0% 0%;
 
-    --destructive: 0 80% 55%;
+    --destructive: 0 100% 50%;
+    /* Red */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
+    --border: 160 100% 45%;
+    /* Green Borders */
+    --input: 160 100% 45%;
     --ring: 160 100% 45%;
 
-    --radius: 0.75rem;
+    --radius: 0px;
+    /* Sharp edges for cyberpunk */
 
     --sidebar-background: 220 18% 10%;
     --sidebar-foreground: 160 60% 90%;
@@ -66,7 +145,12 @@
     font-family: 'Inter', sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Orbitron', sans-serif;
   }
 }
@@ -79,31 +163,31 @@
   .neon-text {
     color: hsl(var(--primary));
     text-shadow: 0 0 7px hsl(var(--primary) / 0.6),
-                 0 0 20px hsl(var(--primary) / 0.3),
-                 0 0 40px hsl(var(--primary) / 0.15);
+      0 0 20px hsl(var(--primary) / 0.3),
+      0 0 40px hsl(var(--primary) / 0.15);
   }
 
   .neon-border {
     border-color: hsl(var(--primary));
     box-shadow: 0 0 8px hsl(var(--primary) / 0.3),
-                inset 0 0 8px hsl(var(--primary) / 0.1);
+      inset 0 0 8px hsl(var(--primary) / 0.1);
   }
 
   .neon-box {
     box-shadow: 0 0 15px hsl(var(--primary) / 0.2),
-                0 0 30px hsl(var(--primary) / 0.1);
+      0 0 30px hsl(var(--primary) / 0.1);
   }
 
   .gold-text {
     color: hsl(var(--accent));
     text-shadow: 0 0 7px hsl(var(--accent) / 0.6),
-                 0 0 20px hsl(var(--accent) / 0.3);
+      0 0 20px hsl(var(--accent) / 0.3);
   }
 
   .danger-text {
     color: hsl(var(--destructive));
     text-shadow: 0 0 7px hsl(var(--destructive) / 0.6),
-                 0 0 20px hsl(var(--destructive) / 0.3);
+      0 0 20px hsl(var(--destructive) / 0.3);
   }
 
   .glass-card {
@@ -113,29 +197,76 @@
   }
 
   @keyframes pulse-neon {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.6;
+    }
   }
 
   @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-8px); }
-    40%, 80% { transform: translateX(8px); }
+
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    20%,
+    60% {
+      transform: translateX(-8px);
+    }
+
+    40%,
+    80% {
+      transform: translateX(8px);
+    }
   }
 
   @keyframes pop-in {
-    0% { transform: scale(0.8); opacity: 0; }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+
+    50% {
+      transform: scale(1.05);
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-8px);
+    }
   }
 
-  .animate-pulse-neon { animation: pulse-neon 2s ease-in-out infinite; }
-  .animate-shake { animation: shake 0.5s ease-in-out; }
-  .animate-pop-in { animation: pop-in 0.4s ease-out; }
-  .animate-float { animation: float 3s ease-in-out infinite; }
+  .animate-pulse-neon {
+    animation: pulse-neon 2s ease-in-out infinite;
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  .animate-pop-in {
+    animation: pop-in 0.4s ease-out;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
 }

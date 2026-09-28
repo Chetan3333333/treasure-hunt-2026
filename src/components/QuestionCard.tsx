@@ -1,70 +1,74 @@
-import { useState } from "react";
+import { Question } from "@/data/gameData";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle } from "lucide-react";
+import { useState } from "react";
 
 interface QuestionCardProps {
-  question: string;
-  options: string[];
-  correctIndex: number;
-  onCorrect: () => void;
-  onWrong: () => void;
-  image?: string;
+  question: Question;
+  onSubmit: (answer: string) => void;
 }
 
-const QuestionCard = ({ question, options, correctIndex, onCorrect, onWrong, image }: QuestionCardProps) => {
-  const [selected, setSelected] = useState<number | null>(null);
-  const [answered, setAnswered] = useState(false);
+const QuestionCard = ({ question, onSubmit }: QuestionCardProps) => {
+  const [answer, setAnswer] = useState("");
 
-  const handleSelect = (idx: number) => {
-    if (answered) return;
-    setSelected(idx);
-    setAnswered(true);
-    setTimeout(() => {
-      if (idx === correctIndex) {
-        onCorrect();
-      } else {
-        onWrong();
-      }
-    }, 800);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (answer.trim()) {
+      onSubmit(answer);
+      setAnswer("");
+    }
   };
 
   return (
-    <div className="glass-card rounded-lg p-6 neon-border animate-pop-in max-w-lg w-full mx-auto">
-      {image && (
-        <div className="mb-4 rounded-md overflow-hidden border border-border">
-          <img src={image} alt="Question visual" className="w-full object-cover max-h-48" />
-        </div>
-      )}
-      <h3 className="text-lg font-medium mb-5 text-foreground leading-relaxed">{question}</h3>
-      <div className="flex flex-col gap-3">
-        {options.map((opt, i) => {
-          const isCorrect = answered && i === correctIndex;
-          const isWrong = answered && i === selected && i !== correctIndex;
+    <Card className="w-full max-w-md mx-auto bg-card/50 border-primary/20 backdrop-blur-sm animate-in fade-in zoom-in duration-500">
+      <CardHeader>
+        <CardTitle className="text-xl font-mono text-primary flex justify-between items-center">
+          <span>:: QUESTION_ID_{question.id} ::</span>
+          {question.timer_seconds > 0 && (
+            <span className="text-destructive animate-pulse">{question.timer_seconds}s</span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-lg font-medium leading-relaxed font-mono">
+          {question.content}
+        </p>
 
-          return (
-            <button
-              key={i}
-              onClick={() => handleSelect(i)}
-              disabled={answered}
-              className={`relative w-full text-left px-4 py-3 rounded-md border transition-all duration-300 font-medium text-sm
-                ${answered
-                  ? isCorrect
-                    ? "border-primary bg-primary/10 text-primary"
-                    : isWrong
-                      ? "border-destructive bg-destructive/10 text-destructive animate-shake"
-                      : "border-border text-muted-foreground opacity-50"
-                  : "border-border hover:border-primary/50 hover:bg-secondary text-foreground cursor-pointer"
-                }`}
-            >
-              <span className="mr-2 text-muted-foreground">{String.fromCharCode(65 + i)}.</span>
-              {opt}
-              {isCorrect && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />}
-              {isWrong && <XCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive" />}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+        {question.type === "IMAGE" && question.image_url && (
+          <div className="relative aspect-video w-full overflow-hidden rounded-md border border-border">
+            <img
+              src={question.image_url}
+              alt="Puzzle"
+              className="object-cover w-full h-full"
+            />
+          </div>
+        )}
+
+        {question.type === "CODE" && question.code_snippet && (
+          <div className="bg-black/80 p-4 rounded-md border border-primary/30 overflow-x-auto">
+            <pre className="text-sm font-mono text-green-400">
+              {question.code_snippet}
+            </pre>
+          </div>
+        )}
+
+        <div className="pt-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              autoFocus
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="ENTER_DECRYPT_KEY..."
+              className="font-mono bg-black/50 border-primary focus:border-primary focus:ring-1 focus:ring-primary h-12 text-lg text-primary placeholder:text-primary/40 ring-offset-black"
+            />
+            <Button type="submit" className="w-full font-mono font-bold h-12 text-lg tracking-widest bg-primary text-black hover:bg-primary/90 transition-all duration-300" variant="default">
+              SUBMIT_PACKET()
+            </Button>
+          </form>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,73 +1,53 @@
-# Welcome to your Lovable project
+# 🏴‍☠️ Treasure Hunt — The Glitch Protocol
 
-## Project info
+A mobile-first, QR-code-based treasure hunt game built for technical events. Players scan QR codes at physical locations, solve coding puzzles, tech riddles, and rapid-fire questions across 4 rounds to win.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🎮 How It Works
 
-## How can I edit this code?
+1. **Login** — Player enters their team name
+2. **QR Scan** — Camera opens to scan a QR code at the physical location
+3. **Solve Questions** — Answer coding, logic, and tech questions
+4. **Location Hints** — After each round, get a hint to find the next QR code
+5. **Win or Get Eliminated** — 3 lifelines, lose them all and you're out!
 
-There are several ways of editing your application.
+## 🛠️ Tech Stack
 
-**Use Lovable**
+- React + TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## 🚀 Getting Started
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# 1. Install dependencies
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 2. Start the dev server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be running at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📝 Customization
 
-**Use GitHub Codespaces**
+To set up the game for your event, edit these files:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- **`src/data/questions.ts`** — Round questions, options, and correct answers
+- **`src/data/gameData.ts`** — Level names and question data
+- **`src/data/questions.ts` (locationHints)** — Physical location hints between rounds
 
-## What technologies are used for this project?
+## 🔒 Anti-Cheat Features
 
-This project is built with:
+- Tab-switch detection (penalizes players who leave the app)
+- Right-click disabled during gameplay
+- Fullscreen mode enforced
+- Dynamic watermark with team name + timestamp
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📦 Build for Production
 
-## How can I deploy this project?
+```sh
+npm run build
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Output will be in the `dist/` folder, ready to deploy on any static hosting.
